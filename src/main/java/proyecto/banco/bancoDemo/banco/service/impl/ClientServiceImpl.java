@@ -10,17 +10,20 @@ import org.springframework.stereotype.Service;
 import proyecto.banco.bancoDemo.banco.dto.AccountRequestDTO;
 import proyecto.banco.bancoDemo.banco.dto.ClienteRequestDTO;
 import proyecto.banco.bancoDemo.banco.dto.ResponseDTO;
+import proyecto.banco.bancoDemo.banco.entity.Movimiento;
 import proyecto.banco.bancoDemo.banco.enums.TipoCliente;
 import proyecto.banco.bancoDemo.banco.enums.TipoCuenta;
 import proyecto.banco.bancoDemo.banco.entity.Cliente;
 import proyecto.banco.bancoDemo.banco.entity.CuentaBancaria;
 import proyecto.banco.bancoDemo.banco.repository.ClientRepository;
 import proyecto.banco.bancoDemo.banco.repository.CuentaBancariaRepository;
+import proyecto.banco.bancoDemo.banco.repository.MovimientosRepository;
 import proyecto.banco.bancoDemo.banco.service.ClientService;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -31,6 +34,8 @@ public class ClientServiceImpl implements ClientService {
     @Autowired
     private ClientRepository clientRepository;
 
+    @Autowired
+    private MovimientosRepository movimientosRepository;
     @Autowired
     private CuentaBancariaRepository cuentaBancariaRepository;
 
@@ -44,8 +49,16 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public Single<ResponseDTO> realizarDeposito(Single<Cliente> cliente, String numCuenta, BigDecimal monto) {
+        Single<CuentaBancaria> cuentaBancaria = Single.fromPublisher(cuentaBancariaRepository.findByNumero(numCuenta))
+                .map(cuenta -> {
+                    cuenta.setSaldo(cuenta.getSaldo().add(monto));
+                 return cuenta;
+                });
+        cuentaBancariaRepository.save(cuentaBancaria.blockingGet()).subscribe();
+        Movimiento movimiento = new Movimiento(new ObjectId(), cuentaBancaria.blockingGet(), monto, new Date());
+        movimientosRepository.save(movimiento);
 
-        return null;
+        return Single.just(new ResponseDTO(true, "Cuenta bancaria creada exitosamente."));
     }
 
     @Override
@@ -68,9 +81,8 @@ public class ClientServiceImpl implements ClientService {
         logger.info("save Cliente");
 
         if (validarClient(clienteRequestDTO)) {
-            ObjectId clientId = new ObjectId();
             Cliente cliente = new Cliente();
-            cliente.setId(clientId);
+            cliente.setId(new ObjectId());
             cliente.setNombre(clienteRequestDTO.getNombre());
             cliente.setNumDocumento(clienteRequestDTO.getNumDocumento());
             cliente.setTipoCliente(clienteRequestDTO.getTipoCliente());
@@ -103,8 +115,7 @@ public class ClientServiceImpl implements ClientService {
             return Single.just(new ResponseDTO(false, "Un cliente empresarial no puede tener una cuenta a plazo fijo."));
         }
 
-        ObjectId clientId = new ObjectId();
-        CuentaBancaria cuentaBancaria = new CuentaBancaria(clientId, accountRequestDTO.getNumProducto(), clienteSingle.blockingGet(), accountRequestDTO.getTipoCuenta(), accountRequestDTO.getSaldo());
+        CuentaBancaria cuentaBancaria = new CuentaBancaria(new ObjectId(), accountRequestDTO.getNumProducto(), clienteSingle.blockingGet(), accountRequestDTO.getTipoCuenta(), accountRequestDTO.getSaldo());
 
         /* TEST */
         if(clienteSingle.blockingGet().getTipoCliente().name().equals(TipoCliente.EMPRESARIAL.name())){

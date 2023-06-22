@@ -38,7 +38,4 @@ public class Credito {
         this.saldo = monto;
     }
 
-    public void realizarPago(BigDecimal monto) {
-        saldo = saldo.subtract(monto);
-    }
 }

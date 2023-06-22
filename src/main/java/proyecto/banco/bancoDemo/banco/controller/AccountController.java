@@ -23,12 +23,12 @@ public class AccountController {
     public Single<ResponseEntity<String>> realizarDeposito(
             @PathVariable String numDoc,
             @PathVariable String numCuenta,
-            @RequestParam BigDecimal monto
+            @RequestParam String monto
     ) {
         // Obtener el cliente y realizar el depósito
         Single<Cliente> cliente = clientService.getClientByDocNum(numDoc);
 
-        return clientService.realizarDeposito(cliente, numCuenta, monto)
+        return clientService.realizarDeposito(cliente, numCuenta, new BigDecimal(monto))
                 .map(response -> {
                     if(response.isValid())return ResponseEntity.status(HttpStatus.CREATED).body("Depósito realizado exitosamente.");
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al depositar.");

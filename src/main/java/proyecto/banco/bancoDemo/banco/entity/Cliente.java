@@ -50,48 +50,6 @@ public class Cliente {
         this.tarjetasCredito = new ArrayList<>();
     }
 
-    public void agregarCuentaBancaria(CuentaBancaria cuenta) {
-        cuentasBancarias.add(cuenta);
-    }
-
-    public void agregarCredito(Credito credito) {
-        creditos.add(credito);
-    }
-
-    public void agregarTarjetaCredito(TarjetaCredito tarjetaCredito) {
-        tarjetasCredito.add(tarjetaCredito);
-    }
-
-    public BigDecimal consultarSaldoCuentasBancarias() {
-        BigDecimal saldoTotal = BigDecimal.ZERO;
-        for (CuentaBancaria cuenta : cuentasBancarias) {
-            saldoTotal = saldoTotal.add(cuenta.getSaldo());
-        }
-        return saldoTotal;
-    }
-
-    public BigDecimal consultarSaldoTarjetasCredito() {
-        BigDecimal saldoTotal = BigDecimal.ZERO;
-        for (TarjetaCredito tarjetaCredito : tarjetasCredito) {
-            saldoTotal = saldoTotal.add(tarjetaCredito.getSaldo());
-        }
-        return saldoTotal;
-    }
-
-    public List<String> consultarMovimientosCuentaBancaria(String cuentaId) {
-        List<String> movimientos = new ArrayList<>();
-        for (CuentaBancaria cuenta : cuentasBancarias) {
-            if (cuenta.getId().equals(cuentaId)) {
-                // Simulación de consulta de movimientos de la cuenta
-                movimientos.add("Movimiento 1");
-                movimientos.add("Movimiento 2");
-                movimientos.add("Movimiento 3");
-                break;
-            }
-        }
-        return movimientos;
-    }
-
     public TipoCliente getTipoCliente() {
         return tipoCliente;
     }

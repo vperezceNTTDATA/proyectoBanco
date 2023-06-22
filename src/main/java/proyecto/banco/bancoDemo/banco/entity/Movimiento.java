@@ -5,12 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 
 @Getter
@@ -20,10 +21,10 @@ import java.time.LocalDateTime;
 @Document(collection = "movimiento")
 public class Movimiento {
     @Id
-    private String id;
+    private ObjectId id;
 
     @DBRef
     private CuentaBancaria cuentaBancaria;
     private BigDecimal monto;
-    private LocalDateTime fecha;
+    private Date fecha;
 }

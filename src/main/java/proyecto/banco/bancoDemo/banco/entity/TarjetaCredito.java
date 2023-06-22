@@ -33,8 +33,4 @@ public class TarjetaCredito {
         this.limiteCredito = limiteCredito;
         this.saldo = BigDecimal.ZERO;
     }
-
-    public void cargarConsumo(BigDecimal monto) {
-        saldo = saldo.add(monto);
-    }
 }

@@ -61,27 +61,4 @@ public class CuentaBancaria {
         this.saldo = saldo;
     }
 
-    public boolean validarCuenta() {
-        if (tipoCuenta == TipoCuenta.AHORRO) {
-            if (movimientosMensuales > 0) {
-                // Verificar el límite máximo de movimientos mensuales para la cuenta de ahorro
-                if (movimientosMensuales > 5) {
-                    return false;
-                }
-            }
-        } else if (tipoCuenta == TipoCuenta.CUENTA_CORRIENTE) {
-            // Validar que no haya límite de movimientos para la cuenta corriente
-            if (movimientosMensuales != -1) {
-                return false;
-            }
-        } else if (tipoCuenta == TipoCuenta.PLAZO_FIJO) {
-            // Validar que solo haya un movimiento permitido en un día específico del mes para el plazo fijo
-            if (movimientosMensuales != 1) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
 }
