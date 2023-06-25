@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono;
 public interface CuentaBancariaRepository extends ReactiveMongoRepository<CuentaBancaria, ObjectId> {
     Mono<CuentaBancaria> findByNumero(String numero);
 
-    @Query(value = "{'cliente.numero': ?0}")
+    @Query(value = "{'cliente.numDocumento': ?0}")
+
     Flux<CuentaBancaria> findByIdCliente(String idCliente);
 }

@@ -10,11 +10,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
 @Setter
-@Document(collection = "tarjetaCredito")
+@Document(collection = "creditCards")
 public class TarjetaCredito {
     @Id
     private ObjectId id;
@@ -27,10 +28,15 @@ public class TarjetaCredito {
     @Field("saldo")
     private BigDecimal saldo;
 
-    public TarjetaCredito(ObjectId id, Cliente cliente, BigDecimal limiteCredito) {
+    private LocalDateTime created;
+    private LocalDateTime updated;
+
+    public TarjetaCredito(ObjectId id, String numero, Cliente cliente, BigDecimal limiteCredito) {
         this.id = id;
+        this.numero = numero;
         this.cliente = cliente;
         this.limiteCredito = limiteCredito;
         this.saldo = BigDecimal.ZERO;
+        this.created = LocalDateTime.now();
     }
 }

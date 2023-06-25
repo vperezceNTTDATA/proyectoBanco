@@ -17,7 +17,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Setter
-@Document(collection = "cuentaBancaria")
+@Document(collection = "bankAccounts")
 public class CuentaBancaria {
     @Id
     private ObjectId id;

@@ -9,20 +9,22 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import proyecto.banco.bancoDemo.banco.enums.TipoCredito;
+import proyecto.banco.bancoDemo.banco.enums.TipoCuenta;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
 @Setter
-@Document(collection = "credito")
+@Document(collection = "credits")
 public class Credito {
     @Id
     private ObjectId id;
     @Field("numero")
     private String numero;
-    @DBRef
-    private Cliente cliente;
+    @Field
+    private String idCliente;
     @Field("tipoCredito")
     private TipoCredito tipoCredito;
     @Field("monto")
@@ -30,12 +32,21 @@ public class Credito {
     @Field("saldo")
     private BigDecimal saldo;
 
-    public Credito(ObjectId id, Cliente cliente, TipoCredito tipoCredito, BigDecimal monto) {
+    private LocalDateTime created;
+    private LocalDateTime updated;
+
+    public Credito(ObjectId id, String numero, String idCliente, String tipoCredito, BigDecimal monto, BigDecimal saldo) {
         this.id = id;
-        this.cliente = cliente;
-        this.tipoCredito = tipoCredito;
+        this.numero = numero;
+        this.idCliente = idCliente;
         this.monto = monto;
-        this.saldo = monto;
+        this.saldo = saldo;
+        if(tipoCredito.equals(TipoCredito.PERSONAL.name())){
+            this.tipoCredito = TipoCredito.PERSONAL;
+        }else if(tipoCredito.equals(TipoCredito.EMPRESARIAL.name())){
+            this.tipoCredito = TipoCredito.EMPRESARIAL;
+        }
+        this.created = LocalDateTime.now();
     }
 
 }

@@ -1,85 +1,90 @@
 package proyecto.banco.bancoDemo.banco.controller;
 
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import proyecto.banco.bancoDemo.banco.dto.AccountRequest;
+import proyecto.banco.bancoDemo.banco.dto.AccountSaldoDTO;
 import proyecto.banco.bancoDemo.banco.entity.Cliente;
+import proyecto.banco.bancoDemo.banco.entity.Credito;
+import proyecto.banco.bancoDemo.banco.entity.CuentaBancaria;
+import proyecto.banco.bancoDemo.banco.entity.TarjetaCredito;
+import proyecto.banco.bancoDemo.banco.service.AccountService;
 import proyecto.banco.bancoDemo.banco.service.ClientService;
+import proyecto.banco.bancoDemo.banco.service.MovimientoService;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/account")
+@RequestMapping(AccountController.ACCOUNT)
 public class AccountController {
+    private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+    public static final String BANK_ACCOUNT = "/bankAccount";
+    public static final String CREDIT_CARD = "/creditCard";
+    public static final String CREDIT = "/credit";
+    public static final String ACCOUNT = "/accounts";
 
     @Autowired
     private ClientService clientService;
+    @Autowired
+    private MovimientoService movimientoService;
+    @Autowired
+    private AccountService accountService;
 
-
-    @PostMapping("/{numDoc}/cuentas/{numCuenta}/deposito")
-    public Single<ResponseEntity<String>> realizarDeposito(
-            @PathVariable String numDoc,
-            @PathVariable String numCuenta,
-            @RequestParam String monto
-    ) {
-        // Obtener el cliente y realizar el depósito
-        Single<Cliente> cliente = clientService.getClientByDocNum(numDoc);
-
-        return clientService.realizarDeposito(cliente, numCuenta, new BigDecimal(monto))
-                .map(response -> {
-                    if(response.isValid())return ResponseEntity.status(HttpStatus.CREATED).body("Depósito realizado exitosamente.");
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al depositar.");
-                });
+    @PostMapping(AccountController.BANK_ACCOUNT)
+    public Single<CuentaBancaria> createClientAccount(@RequestBody @Valid AccountRequest accountRequest) {
+        logger.info("INI - createClientAccount");
+        return accountService.createClientAccount(accountRequest);
     }
 
-    @PostMapping("/{numDoc}/cuentas/{numCuenta}/retiro")
-    public Single<ResponseEntity<String>> realizarRetiro(
-            @PathVariable String numDoc,
-            @PathVariable String numCuenta,
-            @RequestParam BigDecimal monto
-    ) {
-        Single<Cliente> cliente = clientService.getClientByDocNum(numDoc);
-
-        return clientService.realizarRetiro(cliente, numCuenta, monto)
-                .map(response -> {
-                    if(response.isValid())return ResponseEntity.status(HttpStatus.CREATED).body("Retiro realizado exitosamente.");
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al retirar.");
-                });
+    @PostMapping(AccountController.CREDIT)
+    public Single<Credito> createClientCredit(@RequestBody @Valid AccountRequest accountRequest) {
+        logger.info("INI - createClientCredit");
+        return accountService.createClientCredit(accountRequest);
     }
 
-    @PostMapping("/{numDoc}/creditos/{codCredito}/pago")
-    public Single<ResponseEntity<String>> realizarPagoCredito(
-            @PathVariable String numDoc,
-            @PathVariable String codCredito,
-            @RequestParam BigDecimal monto
-    ) {
-        // Obtener el cliente y realizar el pago del crédito
-        Single<Cliente> cliente = clientService.getClientByDocNum(numDoc);
-
-        return clientService.realizarPagoCredito(cliente, codCredito, monto)
-                .map(response -> {
-                    if(response.isValid())return ResponseEntity.status(HttpStatus.CREATED).body("Pago de credito realizado exitosamente.");
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al pagar credito.");
-                });
+    @PostMapping(AccountController.CREDIT_CARD)
+    public Single<TarjetaCredito> createClientCreditCard(@RequestBody @Valid AccountRequest accountRequest) {
+        logger.info("INI - createClientCreditCard");
+        return accountService.createClientCreditCard(accountRequest);
     }
 
-    @PostMapping("/{numDoc}/tarjetas/{numTarjeta}/carga")
-    public Single<ResponseEntity<String>> cargarConsumoTarjetaCredito(
-            @PathVariable String numDoc,
-            @PathVariable String numTarjeta,
-            @RequestParam BigDecimal monto
+    @GetMapping("/{clienteId}/cuentas/{cuentaId}/saldo")
+    public Single<ResponseEntity<BigDecimal>> consultarSaldoCuentaBancaria(
+            @PathVariable String clienteId,
+            @PathVariable String cuentaId
     ) {
-        // Obtener el cliente y cargar el consumo en la tarjeta de crédito
-        Single<Cliente> cliente = clientService.getClientByDocNum(numDoc);
+        return movimientoService.consultarSaldoCuentaBancaria(cuentaId)
+                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response))
+                .onErrorResumeNext(throwable -> Single.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BigDecimal("0.00"))));
 
-        return clientService.cargarConsumoTarjetaCredito(cliente, numTarjeta, monto)
-                .map(response -> {
-                    if(response.isValid())return ResponseEntity.status(HttpStatus.CREATED).body("Carga de consumo en tarjeta de crédito realizada exitosamente.");
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al cargar consumo.");
-                });
+    }
+
+    @GetMapping("/{clienteId}/tarjetas/{tarjetaId}/saldo")
+    public Single<ResponseEntity<BigDecimal>> consultarSaldoTarjetaCredito(
+            @PathVariable String clienteId,
+            @PathVariable String tarjetaId
+    ) {
+        return movimientoService.consultarSaldoTarjetaCredito(tarjetaId)
+                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response))
+                .onErrorResumeNext(throwable -> Single.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BigDecimal("0.00"))));
+
+    }
+
+    @GetMapping("/cuenta/saldo/{clienteId}")
+    public Observable<ResponseEntity<AccountSaldoDTO>> consultarSaldoTarjetaCredito(
+            @PathVariable String clienteId
+    ) {
+        return movimientoService.consultarSaldoCuentas(clienteId)
+                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response));
+
     }
 
 }

@@ -1,53 +1,46 @@
 package proyecto.banco.bancoDemo.banco.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import proyecto.banco.bancoDemo.banco.enums.TipoCliente;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
 @Setter
-@Document(collection = "cliente")
+@Document(collection = "clients")
 public class Cliente {
     @Id
     private ObjectId id;
     @Field("nombre")
     private String nombre;
     @Field("numDocumento")
+    @Indexed(unique = true)
     private String numDocumento;
     @Field("tipoCliente")
     private TipoCliente tipoCliente;
-    @Field("cuentasBancarias")
-    private List<CuentaBancaria> cuentasBancarias;
-    @Field("creditos")
-    private List<Credito> creditos;
-    @Field("tarjetasCredito")
-    private List<TarjetaCredito> tarjetasCredito;
+
+    private LocalDateTime created;
+    private LocalDateTime updated;
 
     public Cliente(ObjectId id) {
         this.id = id;
-        this.cuentasBancarias = new ArrayList<>();
-        this.creditos = new ArrayList<>();
-        this.tarjetasCredito = new ArrayList<>();
+        this.nombre = "";
+        this.numDocumento = "";
     }
 
     public Cliente(ObjectId id, String numDocumento, String nombre) {
         this.id = id;
         this.numDocumento = numDocumento;
         this.nombre = nombre;
-        this.cuentasBancarias = new ArrayList<>();
-        this.creditos = new ArrayList<>();
-        this.tarjetasCredito = new ArrayList<>();
     }
 
     public TipoCliente getTipoCliente() {
