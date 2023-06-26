@@ -6,12 +6,10 @@ import io.reactivex.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import proyecto.banco.bancoDemo.banco.dto.AccountRequest;
-import proyecto.banco.bancoDemo.banco.dto.AccountSaldoDTO;
-import proyecto.banco.bancoDemo.banco.entity.Cliente;
+import proyecto.banco.bancoDemo.banco.dto.BalanceProductDTO;
 import proyecto.banco.bancoDemo.banco.entity.Credito;
 import proyecto.banco.bancoDemo.banco.entity.CuentaBancaria;
 import proyecto.banco.bancoDemo.banco.entity.TarjetaCredito;
@@ -30,11 +28,8 @@ public class AccountController {
     public static final String CREDIT_CARD = "/creditCard";
     public static final String CREDIT = "/credit";
     public static final String ACCOUNT = "/accounts";
+    public static final String GET_BALANCE = "/{clienteNumDoc}/balances";
 
-    @Autowired
-    private ClientService clientService;
-    @Autowired
-    private MovimientoService movimientoService;
     @Autowired
     private AccountService accountService;
 
@@ -56,35 +51,10 @@ public class AccountController {
         return accountService.createClientCreditCard(accountRequest);
     }
 
-    @GetMapping("/{clienteId}/cuentas/{cuentaId}/saldo")
-    public Single<ResponseEntity<BigDecimal>> consultarSaldoCuentaBancaria(
-            @PathVariable String clienteId,
-            @PathVariable String cuentaId
-    ) {
-        return movimientoService.consultarSaldoCuentaBancaria(cuentaId)
-                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response))
-                .onErrorResumeNext(throwable -> Single.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BigDecimal("0.00"))));
-
-    }
-
-    @GetMapping("/{clienteId}/tarjetas/{tarjetaId}/saldo")
-    public Single<ResponseEntity<BigDecimal>> consultarSaldoTarjetaCredito(
-            @PathVariable String clienteId,
-            @PathVariable String tarjetaId
-    ) {
-        return movimientoService.consultarSaldoTarjetaCredito(tarjetaId)
-                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response))
-                .onErrorResumeNext(throwable -> Single.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BigDecimal("0.00"))));
-
-    }
-
-    @GetMapping("/cuenta/saldo/{clienteId}")
-    public Observable<ResponseEntity<AccountSaldoDTO>> consultarSaldoTarjetaCredito(
-            @PathVariable String clienteId
-    ) {
-        return movimientoService.consultarSaldoCuentas(clienteId)
-                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response));
-
+    @RequestMapping(value = AccountController.GET_BALANCE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Observable<BalanceProductDTO> findBalanceProduct(@PathVariable String clienteNumDoc) {
+        logger.info("INI - findBalanceProduct");
+        return accountService.findBalanceProduct(clienteNumDoc);
     }
 
 }

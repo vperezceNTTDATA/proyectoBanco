@@ -8,8 +8,8 @@ import proyecto.banco.bancoDemo.banco.entity.Movimiento;
 import reactor.core.publisher.Flux;
 
 public interface MovimientosRepository extends ReactiveMongoRepository<Movimiento, ObjectId> {
-    @Query(value = "{'cuentaBancaria.numero': ?0}")
-    Flux<Movimiento> findByCuentaBancariaNumero(String cuentaNum);
+    @Query(value = "{'idProduct': ?0}")
+    Flux<Movimiento> findByCuentaBancariaNumero(String idProducto);
 
 
 }

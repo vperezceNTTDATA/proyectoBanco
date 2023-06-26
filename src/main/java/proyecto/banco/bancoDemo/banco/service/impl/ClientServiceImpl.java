@@ -48,7 +48,7 @@ public class ClientServiceImpl implements ClientService {
                  return cuenta;
                 });
         cuentaBancariaRepository.save(cuentaBancaria.blockingGet()).subscribe();
-        Movimiento movimiento = new Movimiento(new ObjectId(), cuentaBancaria.blockingGet(), monto, new Date());
+        Movimiento movimiento = new Movimiento();
         movimientosRepository.save(movimiento);
 
         return Single.just(new ResponseDTO(true, "Cuenta bancaria creada exitosamente."));

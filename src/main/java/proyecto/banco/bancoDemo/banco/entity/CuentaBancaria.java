@@ -5,12 +5,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import proyecto.banco.bancoDemo.banco.enums.TipoCuenta;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -22,9 +24,10 @@ public class CuentaBancaria {
     @Id
     private ObjectId id;
     @Field("numero")
+    @Indexed(unique = true)
     private String numero;
-    @DBRef
-    private Cliente cliente;
+    @Field
+    private String idCliente;
     @Field("tipoCuenta")
     private TipoCuenta tipoCuenta;
     @Field("movimientosMensuales")
@@ -35,19 +38,31 @@ public class CuentaBancaria {
     private List<String> titulares;
     private List<String> firmantesAutorizados;
 
-    public CuentaBancaria(ObjectId id, String numero, Cliente cliente, TipoCuenta tipoCuenta, int movimientosMensuales, BigDecimal saldo) {
+    private LocalDateTime created;
+    private LocalDateTime updated;
+
+    public CuentaBancaria(ObjectId id, String numero, String idCliente, String tipoCuenta, int movimientosMensuales, BigDecimal saldo) {
         this.id = id;
         this.numero = numero;
-        this.cliente = cliente;
-        this.tipoCuenta = tipoCuenta;
+        this.idCliente = idCliente;
+
+        if(tipoCuenta.equals(TipoCuenta.AHORRO.name())){
+            this.tipoCuenta = TipoCuenta.AHORRO;
+        }else if(tipoCuenta.equals(TipoCuenta.CUENTA_CORRIENTE.name())){
+            this.tipoCuenta = TipoCuenta.CUENTA_CORRIENTE;
+        }else{
+            this.tipoCuenta = TipoCuenta.PLAZO_FIJO;
+        }
+
         this.movimientosMensuales = movimientosMensuales;
         this.saldo = saldo;
+        this.created = LocalDateTime.now();
     }
 
-    public CuentaBancaria(ObjectId id, String numero, Cliente cliente, String tipoCuenta, BigDecimal saldo) {
+    public CuentaBancaria(ObjectId id, String numero, String idCliente, String tipoCuenta, BigDecimal saldo) {
         this.id = id;
         this.numero = numero;
-        this.cliente = cliente;
+        this.idCliente = idCliente;
 
         if(tipoCuenta.equals(TipoCuenta.AHORRO.name())){
             this.tipoCuenta = TipoCuenta.AHORRO;
@@ -59,6 +74,7 @@ public class CuentaBancaria {
 
         this.movimientosMensuales = 0;
         this.saldo = saldo;
+        this.created = LocalDateTime.now();
     }
 
 }
