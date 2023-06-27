@@ -1,15 +1,15 @@
 package proyecto.banco.bancoDemo.banco.entity;
 
+import proyecto.banco.bancoDemo.banco.enums.TipoCuenta;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import proyecto.banco.bancoDemo.banco.enums.TipoCuenta;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Document(collection = "bankAccounts")
-public class CuentaBancaria {
+public class BankAccount {
     @Id
     private ObjectId id;
     @Field("numero")
@@ -32,6 +32,7 @@ public class CuentaBancaria {
     private TipoCuenta tipoCuenta;
     @Field("movimientosMensuales")
     private int movimientosMensuales;
+    private int movimientosActuales;
     @Field("saldo")
     private BigDecimal saldo;
 
@@ -41,7 +42,7 @@ public class CuentaBancaria {
     private LocalDateTime created;
     private LocalDateTime updated;
 
-    public CuentaBancaria(ObjectId id, String numero, String idCliente, String tipoCuenta, int movimientosMensuales, BigDecimal saldo) {
+    public BankAccount(ObjectId id, String numero, String idCliente, String tipoCuenta, int movimientosMensuales, BigDecimal saldo) {
         this.id = id;
         this.numero = numero;
         this.idCliente = idCliente;
@@ -59,7 +60,7 @@ public class CuentaBancaria {
         this.created = LocalDateTime.now();
     }
 
-    public CuentaBancaria(ObjectId id, String numero, String idCliente, String tipoCuenta, BigDecimal saldo) {
+    public BankAccount(ObjectId id, String numero, String idCliente, String tipoCuenta, BigDecimal saldo) {
         this.id = id;
         this.numero = numero;
         this.idCliente = idCliente;
@@ -72,7 +73,8 @@ public class CuentaBancaria {
             this.tipoCuenta = TipoCuenta.PLAZO_FIJO;
         }
 
-        this.movimientosMensuales = 0;
+        this.movimientosMensuales = 10;
+        this.movimientosActuales = 0;
         this.saldo = saldo;
         this.created = LocalDateTime.now();
     }

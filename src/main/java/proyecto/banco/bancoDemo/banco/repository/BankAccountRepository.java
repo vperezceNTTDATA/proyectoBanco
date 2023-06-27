@@ -3,13 +3,13 @@ package proyecto.banco.bancoDemo.banco.repository;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import proyecto.banco.bancoDemo.banco.entity.CuentaBancaria;
+import proyecto.banco.bancoDemo.banco.entity.BankAccount;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface CuentaBancariaRepository extends ReactiveMongoRepository<CuentaBancaria, ObjectId> {
-    Mono<CuentaBancaria> findByNumero(String numero);
-
+public interface BankAccountRepository extends ReactiveMongoRepository<BankAccount, ObjectId> {
+    Mono<BankAccount> findByNumero(String numero);
     @Query("{'idCliente': ?0 }")
-    Flux<CuentaBancaria> findByIdCliente(String idCliente);
+    Flux<BankAccount> findByIdCliente(String idCliente);
+
 }

@@ -1,12 +1,11 @@
 package proyecto.banco.bancoDemo.banco.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.bson.types.ObjectId;
 
 @Getter
-@NoArgsConstructor
-@Setter
+@AllArgsConstructor
 public class AccountProductDTO {
-
+    private ObjectId objectId;
 }

@@ -11,5 +11,5 @@ import lombok.Setter;
 @Setter
 public class ResponseDTO {
     boolean isValid;
-    String observacion;
+    String description;
 }

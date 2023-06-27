@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -17,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Setter
 @Document(collection = "creditCards")
-public class TarjetaCredito {
+public class CreditCard {
     @Id
     private ObjectId id;
     @Field("numero")
@@ -27,18 +26,18 @@ public class TarjetaCredito {
     private String idCliente;
     @Field("limiteCredito")
     private BigDecimal limiteCredito;
-    @Field("saldo")
-    private BigDecimal saldo;
+    @Field("consumo")
+    private BigDecimal consumo;
 
     private LocalDateTime created;
     private LocalDateTime updated;
 
-    public TarjetaCredito(ObjectId id, String numero, String idCliente, BigDecimal limiteCredito) {
+    public CreditCard(ObjectId id, String numero, String idCliente, BigDecimal limiteCredito) {
         this.id = id;
         this.numero = numero;
         this.idCliente = idCliente;
         this.limiteCredito = limiteCredito;
-        this.saldo = BigDecimal.ZERO;
+        this.consumo = BigDecimal.ZERO;
         this.created = LocalDateTime.now();
     }
 }

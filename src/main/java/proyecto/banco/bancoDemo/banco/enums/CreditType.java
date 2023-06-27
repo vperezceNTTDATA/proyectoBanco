@@ -1,6 +1,6 @@
 package proyecto.banco.bancoDemo.banco.enums;
 
-public enum TipoCredito {
+public enum CreditType {
     PERSONAL,
     EMPRESARIAL
 }

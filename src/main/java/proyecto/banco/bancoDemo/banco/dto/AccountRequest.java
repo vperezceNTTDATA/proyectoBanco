@@ -12,8 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 public class AccountRequest {
-    //@NotBlank(message = "El campo 'numDocumento' no puede estar en blanco")
-    //private String idCliente;
     @NotBlank(message = "El campo 'numDocumento' no puede estar en blanco")
     private String numDocumento;
     @NotBlank(message = "El campo 'numProducto' no puede estar en blanco")

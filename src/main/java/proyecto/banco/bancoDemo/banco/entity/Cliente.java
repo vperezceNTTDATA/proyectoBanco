@@ -1,6 +1,5 @@
 package proyecto.banco.bancoDemo.banco.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

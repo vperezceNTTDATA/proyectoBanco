@@ -10,15 +10,11 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import proyecto.banco.bancoDemo.banco.dto.AccountRequest;
 import proyecto.banco.bancoDemo.banco.dto.BalanceProductDTO;
-import proyecto.banco.bancoDemo.banco.entity.Credito;
-import proyecto.banco.bancoDemo.banco.entity.CuentaBancaria;
-import proyecto.banco.bancoDemo.banco.entity.TarjetaCredito;
+import proyecto.banco.bancoDemo.banco.entity.Credit;
+import proyecto.banco.bancoDemo.banco.entity.BankAccount;
+import proyecto.banco.bancoDemo.banco.entity.CreditCard;
 import proyecto.banco.bancoDemo.banco.service.AccountService;
-import proyecto.banco.bancoDemo.banco.service.ClientService;
-import proyecto.banco.bancoDemo.banco.service.MovimientoService;
-
 import javax.validation.Valid;
-import java.math.BigDecimal;
 
 @RestController
 @RequestMapping(AccountController.ACCOUNT)
@@ -29,24 +25,22 @@ public class AccountController {
     public static final String CREDIT = "/credit";
     public static final String ACCOUNT = "/accounts";
     public static final String GET_BALANCE = "/{clienteNumDoc}/balances";
-
     @Autowired
     private AccountService accountService;
-
     @PostMapping(AccountController.BANK_ACCOUNT)
-    public Single<CuentaBancaria> createClientAccount(@RequestBody @Valid AccountRequest accountRequest) {
+    public Single<BankAccount> createClientAccount(@RequestBody @Valid AccountRequest accountRequest) {
         logger.info("INI - createClientAccount");
         return accountService.createClientAccount(accountRequest);
     }
 
     @PostMapping(AccountController.CREDIT)
-    public Single<Credito> createClientCredit(@RequestBody @Valid AccountRequest accountRequest) {
+    public Single<Credit> createClientCredit(@RequestBody @Valid AccountRequest accountRequest) {
         logger.info("INI - createClientCredit");
         return accountService.createClientCredit(accountRequest);
     }
 
     @PostMapping(AccountController.CREDIT_CARD)
-    public Single<TarjetaCredito> createClientCreditCard(@RequestBody @Valid AccountRequest accountRequest) {
+    public Single<CreditCard> createClientCreditCard(@RequestBody @Valid AccountRequest accountRequest) {
         logger.info("INI - createClientCreditCard");
         return accountService.createClientCreditCard(accountRequest);
     }
