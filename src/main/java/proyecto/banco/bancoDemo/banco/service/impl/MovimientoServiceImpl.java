@@ -33,10 +33,6 @@ public class MovimientoServiceImpl implements MovimientoService {
     private CreditRepository creditRepository;
 
     @Override
-    public Observable<Movimiento> getMovimientos() {
-        return Observable.fromPublisher(movimientosRepository.findAll());
-    }
-    @Override
     public Observable<Movimiento> findTransactionsByProduct(String cuentaNum) {
         logger.info("INI - consultarMovimientosCuentaBancaria - ServiceIMPL");
         return this.findProductByProdNumber(cuentaNum)

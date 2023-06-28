@@ -8,7 +8,6 @@ import proyecto.banco.bancoDemo.banco.entity.Movimiento;
 import java.math.BigDecimal;
 
 public interface MovimientoService {
-    Observable<Movimiento> getMovimientos();
     Observable<Movimiento> findTransactionsByProduct(String cuentaNum);
 
     Single<ResponseDTO> makeDeposit(String docClient, String numCuenta, BigDecimal monto);

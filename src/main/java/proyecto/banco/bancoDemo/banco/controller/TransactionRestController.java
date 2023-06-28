@@ -28,10 +28,6 @@ public class TransactionRestController {
     @Autowired
     private MovimientoService movimientoService;
 
-    @RequestMapping(value ="/mov" , produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Observable<Movimiento> getMovimiento() {
-        return movimientoService.getMovimientos();
-    }
     @RequestMapping(value = TransactionRestController.GET_TRANSACTIONSByACCOUNT, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Observable<Movimiento> findTransactionsByProduct( @PathVariable String idAccount) {
         logger.info("INI - findTransactionsByProduct");
