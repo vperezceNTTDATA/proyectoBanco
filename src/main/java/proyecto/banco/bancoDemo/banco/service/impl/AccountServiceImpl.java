@@ -44,25 +44,31 @@ public class AccountServiceImpl implements AccountService {
                 clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
                         .flatMap(cliente -> {
                             if(cliente.getTipoCliente().name().equals(TipoCliente.EMPRESARIAL.name())) {
-                                if (accountRequest.getTipoCuenta().equals(TipoCuenta.AHORRO.name())) {
-                                    return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta de ahorro."));
-                                } else if (accountRequest.getTipoCuenta().equals(TipoCuenta.PLAZO_FIJO.name())) {
-                                    {
-                                        return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta a plazo fijo."));
-                                    }
-                                }
+                                if (accountRequest.getTipoCuenta().equals(TipoCuenta.AHORRO.name())) return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta de ahorro."));
+                                else if (accountRequest.getTipoCuenta().equals(TipoCuenta.PLAZO_FIJO.name())) return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta a plazo fijo."));
                             }
                             else if(cliente.getTipoCliente().name().equals(TipoCliente.PERSONAL.name()))  {
                                 return bankAccountRepository.findByIdCliente(cliente.getId().toString()).flatMap(bankAccount -> Mono.error(
-                                        new ConflictException("Cliente personal: " + accountRequest.getNumDocumento() + " ya tiene una cuenta de ahorro, una cuenta corriente o cuentas a plazo fijo")
-                                )).then(Mono.just(cliente));
+                                        new ConflictException("Cliente personal: " + accountRequest.getNumDocumento() + " ya tiene una cuenta de ahorro, una cuenta corriente o cuentas a plazo fijo")))
+                                        .then(Mono.just(cliente));
+                            }
+                            else if(cliente.getTipoCliente().name().equals(TipoCliente.PERSONAL_VIP.name()))  {
+                                return creditCardRepository.findByIdCliente(cliente.getId().toString())
+                                        .switchIfEmpty(Mono.error(new ConflictException("Cliente VIP: " + accountRequest.getNumDocumento() + " debe tener una tarjeta de crédito. ")))
+                                        .then(Mono.just(cliente));
+                            }
+                            else if(cliente.getTipoCliente().name().equals(TipoCliente.EMPRESARIAL_PYME.name()))  {
+                                return bankAccountRepository.findByIdCliente(cliente.getId().toString())
+                                        .filter(bankAccount -> bankAccount.getTipoCuenta().name().equals(TipoCuenta.CUENTA_CORRIENTE.name()))
+                                        .switchIfEmpty(Mono.error(new ConflictException("Cliente PYME: " + accountRequest.getNumDocumento() + " debe de tener una cuenta corriente")))
+                                        .then(creditCardRepository.findByIdCliente(cliente.getId().toString())
+                                                .switchIfEmpty(Mono.error(new ConflictException("Cliente PYME: " + accountRequest.getNumDocumento() + " debe tener una tarjeta de crédito. ")))
+                                                .then(Mono.just(cliente)));
                             }
                             return Mono.just(cliente);
                         }).switchIfEmpty(Mono.error(new ConflictException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta")))
                 );
-
         BankAccount bankAccount = new BankAccount(new ObjectId(), accountRequest.getNumProducto(), clienteSingle.blockingGet().getId().toString(), accountRequest.getTipoCuenta(), accountRequest.getSaldo());
-
         if(clienteSingle.blockingGet().getTipoCliente().name().equals(TipoCliente.EMPRESARIAL.name())){
             if(validarTitularFirmantes(accountRequest)){
                 bankAccount.setTitulares(accountRequest.getListTitulares());

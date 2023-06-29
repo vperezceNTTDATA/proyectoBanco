@@ -73,7 +73,7 @@ public class BankAccount {
             this.tipoCuenta = TipoCuenta.PLAZO_FIJO;
         }
 
-        this.movimientosMensuales = 10;
+        this.movimientosMensuales = 20;
         this.movimientosActuales = 0;
         this.saldo = saldo;
         this.created = LocalDateTime.now();

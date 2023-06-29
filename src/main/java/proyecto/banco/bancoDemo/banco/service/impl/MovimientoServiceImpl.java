@@ -2,6 +2,7 @@ package proyecto.banco.bancoDemo.banco.service.impl;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import proyecto.banco.bancoDemo.banco.entity.Movimiento;
 import proyecto.banco.bancoDemo.banco.repository.*;
 import proyecto.banco.bancoDemo.banco.service.MovimientoService;
 import proyecto.banco.bancoDemo.model.exepcion.ConflictException;
+import proyecto.banco.bancoDemo.model.exepcion.NotFoundException;
 import proyecto.banco.bancoDemo.util.Constantes;
 import reactor.core.publisher.Mono;
 
@@ -46,10 +48,12 @@ public class MovimientoServiceImpl implements MovimientoService {
         return Single.fromPublisher(clientRepository.findByNumDocumento(docNumClient)
                 .flatMap(client -> bankAccountRepository.findByNumero(numCuenta)
                                     .flatMap(cuentaBancaria -> {
-                                        cuentaBancaria.setSaldo(cuentaBancaria.getSaldo().add(monto));
+                                        BigDecimal newMonto = monto;
                                         cuentaBancaria.setMovimientosActuales(cuentaBancaria.getMovimientosActuales() + 1);
+                                        if(cuentaBancaria.getMovimientosActuales() >= cuentaBancaria.getMovimientosMensuales())newMonto = monto.subtract(Constantes.COMMISSION_AMOUNT);
+                                        cuentaBancaria.setSaldo(cuentaBancaria.getSaldo().add(newMonto));
                                         bankAccountRepository.save(cuentaBancaria).subscribe();
-                                        movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), monto, Constantes.DEPOSIT)).subscribe();
+                                        movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), newMonto, Constantes.DEPOSIT, monto)).subscribe();
                                         return Mono.just(new ResponseDTO(true, ""));
                                     }).switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + numCuenta + " no existe."))))
                 .switchIfEmpty(Mono.error(new ConflictException("Cliente: " + docNumClient + " no existe esta cuenta"))));
@@ -60,11 +64,13 @@ public class MovimientoServiceImpl implements MovimientoService {
         return Single.fromPublisher(clientRepository.findByNumDocumento(docNumClient)
                 .flatMap(client -> bankAccountRepository.findByNumero(numCuenta)
                         .flatMap(cuentaBancaria -> {
-                            if(cuentaBancaria.getSaldo().compareTo(monto) < 0)return Mono.error(new ConflictException("No tienes suficiente saldo."));
-                            cuentaBancaria.setSaldo(cuentaBancaria.getSaldo().subtract(monto));
+                            BigDecimal newMonto = monto;
                             cuentaBancaria.setMovimientosActuales(cuentaBancaria.getMovimientosActuales() + 1);
+                            if(cuentaBancaria.getMovimientosActuales() >= cuentaBancaria.getMovimientosMensuales())newMonto = monto.add(Constantes.COMMISSION_AMOUNT);
+                            if(cuentaBancaria.getSaldo().compareTo(newMonto) < 0)return Mono.error(new ConflictException("No tienes suficiente saldo."));
+                            cuentaBancaria.setSaldo(cuentaBancaria.getSaldo().subtract(newMonto));
                             bankAccountRepository.save(cuentaBancaria).subscribe();
-                            movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), monto, Constantes.RETIRO)).subscribe();
+                            movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), newMonto, Constantes.RETIRO, monto)).subscribe();
                             return Mono.just(new ResponseDTO(true, ""));
                         }).switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + numCuenta + " no existe."))))
                 .switchIfEmpty(Mono.error(new ConflictException("Cliente: " + docNumClient + " no existe esta cuenta"))));
@@ -97,6 +103,36 @@ public class MovimientoServiceImpl implements MovimientoService {
                             return Mono.just(new ResponseDTO(true, ""));
                         }).switchIfEmpty(Mono.error(new ConflictException("Tarjeta de crédito: " + numCuenta + " no existe."))))
                 .switchIfEmpty(Mono.error(new ConflictException("Cliente: " + docNumClient + " no existe esta cuenta"))));
+    }
+
+    @Override
+    public Single<ResponseDTO> makeTransfer(String numSend, String numRec, BigDecimal monto) {
+        logger.info("INI - makeTransfer - ServiceIMPL");
+
+        return Single.fromPublisher(bankAccountRepository.findByNumero(numSend)
+                .flatMap(bankAccountSend -> bankAccountRepository.findByNumero(numRec)
+                        .flatMap(bankAccountRec -> {
+                            if(bankAccountSend.getSaldo().compareTo(monto) < 0)return Mono.error(new ConflictException("No tienes suficiente saldo."));
+                            bankAccountSend.setSaldo(bankAccountSend.getSaldo().subtract(monto));
+                            bankAccountRepository.save(bankAccountSend).subscribe();
+                            bankAccountRec.setSaldo(bankAccountRec.getSaldo().add(monto));
+                            bankAccountRepository.save(bankAccountRec).subscribe();
+                            if(bankAccountRec.getIdCliente().equals(bankAccountSend.getIdCliente()))movimientosRepository.save(new Movimiento(new ObjectId(), bankAccountSend.getId().toString(), monto, Constantes.TRANS_PROPIO, bankAccountRec.getId().toString())).subscribe();
+                            else movimientosRepository.save(new Movimiento(new ObjectId(), bankAccountSend.getId().toString(), monto, Constantes.TRANS_TERCERO, bankAccountRec.getId().toString())).subscribe();
+                            return Mono.just(new ResponseDTO(true, ""));
+                        })
+                        .switchIfEmpty(Mono.error(new ConflictException("Número de cuenta: " + numRec + " no existe."))))
+                .switchIfEmpty(Mono.error(new ConflictException("Número de cuenta: " + numSend + " no existe."))));
+
+    }
+
+    @Override
+    public Observable<Movimiento> getCommissionsByProduct(String cuentaNum) {
+        logger.info("INI - getCommissionsByProduct - ServiceIMPL");
+        return Observable.fromPublisher(bankAccountRepository.findByNumero(cuentaNum)
+                .flatMapMany(bankAccountSend -> movimientosRepository.findByCuentaBancariaNumero(bankAccountSend.getId().toString())
+                        .switchIfEmpty(Mono.error(new NotFoundException("No tiene movimientos con comisiones."))))
+                .switchIfEmpty(Mono.error(new NotFoundException("Número de cuenta: " + cuentaNum + " no existe."))));
     }
 
 

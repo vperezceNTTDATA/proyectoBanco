@@ -9,9 +9,11 @@ import java.math.BigDecimal;
 
 public interface MovimientoService {
     Observable<Movimiento> findTransactionsByProduct(String cuentaNum);
-
     Single<ResponseDTO> makeDeposit(String docClient, String numCuenta, BigDecimal monto);
     Single<ResponseDTO> makeRetiro(String docClient, String numCuenta, BigDecimal monto);
     Single<ResponseDTO> makeCreditPaid(String docClient, String numCuenta, BigDecimal monto);
     Single<ResponseDTO> makeCreditCardConsume(String docClient, String numCuenta, BigDecimal monto);
+    Single<ResponseDTO> makeTransfer(String numSend, String numRec, BigDecimal monto);
+    Observable<Movimiento> getCommissionsByProduct(String cuentaNum);
+
 }

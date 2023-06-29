@@ -47,6 +47,8 @@ public class Credit {
 
         if(creditType.equals(CreditType.PERSONAL.name()))this.tipoCredito = CreditType.PERSONAL;
         else if(creditType.equals(CreditType.EMPRESARIAL.name()))this.tipoCredito = CreditType.EMPRESARIAL;
+        else if(creditType.equals(CreditType.EMPRESARIAL_PYME.name()))this.tipoCredito = CreditType.EMPRESARIAL_PYME;
+        else if(creditType.equals(CreditType.PERSONAL_VIP.name()))this.tipoCredito = CreditType.PERSONAL_VIP;
 
         this.created = LocalDateTime.now();
     }

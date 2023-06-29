@@ -19,10 +19,12 @@ public class Movimiento {
     private ObjectId id;
     @Field
     private String idProduct;
+    private String idProductReceive;
     private BigDecimal monto;
     private String action;
     private LocalDateTime fecha;
 
+    private Boolean withCommission;
     private LocalDateTime created;
     private LocalDateTime updated;
 
@@ -33,5 +35,27 @@ public class Movimiento {
         this.action = action;
         this.fecha = LocalDateTime.now();
         this.created = LocalDateTime.now();
+        this.withCommission = false;
+    }
+    public Movimiento(ObjectId id, String idProduct, BigDecimal newMonto, String action, BigDecimal monto) {
+        this.id = id;
+        this.idProduct = idProduct;
+        this.monto = newMonto;
+        if(newMonto.compareTo(monto) == 0)this.withCommission = true;
+            else this.withCommission = false;
+        this.action = action;
+        this.fecha = LocalDateTime.now();
+        this.created = LocalDateTime.now();
+    }
+    
+    public Movimiento(ObjectId id, String idProduct, BigDecimal monto, String action, String idProductReceive) {
+        this.id = id;
+        this.idProduct = idProduct;
+        this.monto = monto;
+        this.idProductReceive = idProductReceive;
+        this.action = action;
+        this.fecha = LocalDateTime.now();
+        this.created = LocalDateTime.now();
+        this.withCommission = false;
     }
 }

@@ -41,14 +41,10 @@ public class ClientServiceImpl implements ClientService {
             cliente.setTipoCliente(clienteRequestDTO.getTipoCliente());
             cliente.setCreated(LocalDateTime.now());
 
-        return Single.fromPublisher(this.verificarClienteExiste(clienteRequestDTO.getNumDocumento())
-                                    .then(this.clientRepository.save(cliente)));
+        return Single.fromPublisher(this.clientRepository.findByNumDocumento(clienteRequestDTO.getNumDocumento())
+                    .map(productEntity -> Mono.error(
+                            new ConflictException("Client docNumero already exists : " + clienteRequestDTO.getNumDocumento())
+                    )).then(this.clientRepository.save(cliente)));
     }
 
-    private Mono<Void> verificarClienteExiste(String docNumero){
-        return this.clientRepository.findByNumDocumento(docNumero)
-                .flatMap(productEntity -> Mono.error(
-                        new ConflictException("Client docNumero already exists : " + docNumero)
-                ));
-    }
 }

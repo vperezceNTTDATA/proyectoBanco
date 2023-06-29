@@ -16,7 +16,7 @@ import proyecto.banco.bancoDemo.banco.service.MovimientoService;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/transactions")
+@RequestMapping(TransactionRestController.TRANSACTION)
 public class TransactionRestController {
     private static final Logger logger = LoggerFactory.getLogger(TransactionRestController.class);
     public static final String GET_TRANSACTIONSByACCOUNT = "/{idAccount}/account";
@@ -24,6 +24,8 @@ public class TransactionRestController {
     public static final String POST_MAKE_RETIRO = "/{numCliente}/account/{numProd}/retiro";
     public static final String POST_PAY_CREDIT = "/{numCliente}/credit/{numProd}/payment";
     public static final String POST_PAY_CREDIT_CARD = "/{numCliente}/creditCard/{numProd}/consume";
+    public static final String POST_TRANSFER = "/{numBankAccountSend}/send/{numBankAccountRec}/receive";
+    public static final String TRANSACTION = "/transactions";
 
     @Autowired
     private MovimientoService movimientoService;
@@ -33,31 +35,38 @@ public class TransactionRestController {
         logger.info("INI - findTransactionsByProduct");
         return movimientoService.findTransactionsByProduct(idAccount);
     }
-
     @PostMapping(TransactionRestController.POST_MAKE_DEPOSITO)
     public Single<ResponseEntity<String>> doDeposit(@PathVariable String numCliente, @PathVariable String numProd, @RequestParam String monto) {
+        logger.info("INI - doDeposit");
         return movimientoService.makeDeposit(numCliente, numProd, new BigDecimal(monto))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED).body("Depósito realizado exitosamente."));
     }
-
     @PostMapping(TransactionRestController.POST_MAKE_RETIRO)
     public Single<ResponseEntity<String>> doRetiro(@PathVariable String numCliente, @PathVariable String numProd, @RequestParam String monto) {
+        logger.info("INI - doRetiro");
         return movimientoService.makeRetiro(numCliente, numProd, new BigDecimal(monto))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED).body("Retiro realizado exitosamente."));
     }
-
     @PostMapping(TransactionRestController.POST_PAY_CREDIT)
     public Single<ResponseEntity<String>> doCreditPaid(@PathVariable String numCliente, @PathVariable String numProd, @RequestParam String monto) {
+        logger.info("INI - doCreditPaid");
         return movimientoService.makeCreditPaid(numCliente, numProd, new BigDecimal(monto))
                 .filter(ResponseDTO::isValid)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED).body("Pago de crédito realizado exitosamente."))
                 .switchIfEmpty(Single.just(ResponseEntity.status(HttpStatus.ACCEPTED).body("Credit ya está pagado")));
     }
-
     @PostMapping(TransactionRestController.POST_PAY_CREDIT_CARD)
     public Single<ResponseEntity<String>> doCreditCardConsume(@PathVariable String numCliente, @PathVariable String numProd, @RequestParam String monto) {
+        logger.info("INI - doCreditCardConsume");
         return movimientoService.makeCreditCardConsume(numCliente, numProd, new BigDecimal(monto))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED).body("Consumo de la tarjeta de crédito realizado exitosamente."));
     }
+    @PostMapping(TransactionRestController.POST_TRANSFER)
+    public Single<ResponseEntity<String>> doTransfer(@PathVariable String numBankAccountSend, @PathVariable String numBankAccountRec, @RequestParam String monto) {
+        logger.info("INI - doTransfer");
+        return movimientoService.makeTransfer(numBankAccountSend, numBankAccountRec, new BigDecimal(monto))
+                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body("Transferencia realizado exitosamente."));
+    }
+
 
 }
