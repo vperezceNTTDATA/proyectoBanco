@@ -14,6 +14,6 @@ public interface MovimientoService {
     Single<ResponseDTO> makeCreditPaid(String docClient, String numCuenta, BigDecimal monto);
     Single<ResponseDTO> makeCreditCardConsume(String docClient, String numCuenta, BigDecimal monto);
     Single<ResponseDTO> makeTransfer(String numSend, String numRec, BigDecimal monto);
-    Observable<Movimiento> getCommissionsByProduct(String cuentaNum);
+
 
 }

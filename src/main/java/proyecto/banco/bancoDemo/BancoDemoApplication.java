@@ -6,7 +6,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class BancoDemoApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(BancoDemoApplication.class, args);
+		try {
+			SpringApplication.run(BancoDemoApplication.class, args);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

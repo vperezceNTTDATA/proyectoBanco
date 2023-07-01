@@ -8,7 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface CreditCardRepository extends ReactiveMongoRepository<CreditCard, ObjectId> {
-    Mono<CreditCard> findByNumero(String numero);
+    Mono<CreditCard> findByCardNumber(String numero);
     @Query("{'idCliente': ?0 }")
     Flux<CreditCard> findByIdCliente(String idCliente);
 

@@ -16,6 +16,7 @@ public class AccountRequest {
     private String numDocumento;
     @NotBlank(message = "El campo 'numProducto' no puede estar en blanco")
     private String numProducto;
+    private String numberDebitCard;
     private String saldo;
     private String tipoCuenta;
     private String monto;

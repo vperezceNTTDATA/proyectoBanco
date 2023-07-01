@@ -41,7 +41,6 @@ public class MovimientoServiceImpl implements MovimientoService {
                     .flatMapObservable(product -> Observable.fromPublisher(movimientosRepository.findByCuentaBancariaNumero(product.getObjectId().toString()))
                             .switchIfEmpty(Observable.empty()));
     }
-
     @Override
     public Single<ResponseDTO> makeDeposit(String docNumClient, String numCuenta, BigDecimal monto) {
         logger.info("INI - makeDeposit - ServiceIMPL");
@@ -94,17 +93,16 @@ public class MovimientoServiceImpl implements MovimientoService {
     public Single<ResponseDTO> makeCreditCardConsume(String docNumClient, String numCuenta, BigDecimal monto) {
         logger.info("INI - makeCreditCardConsume - ServiceIMPL");
         return Single.fromPublisher(clientRepository.findByNumDocumento(docNumClient)
-                .flatMap(client -> creditCardRepository.findByNumero(numCuenta)
+                .flatMap(client -> creditCardRepository.findByCardNumber(numCuenta)
                         .flatMap(creditCard -> {
-                            if((creditCard.getLimiteCredito().subtract(creditCard.getConsumo())).compareTo(monto) < 0)return Mono.error(new ConflictException("El monto del consumo excede al limite de su tarjeta."));
-                            creditCard.setConsumo(creditCard.getConsumo().add(monto));
+                            if((creditCard.getAvailableBalance().subtract(creditCard.getUtilizedBalance())).compareTo(monto) < 0)return Mono.error(new ConflictException("El monto del consumo excede al limite de su tarjeta."));
+                            creditCard.setUtilizedBalance(creditCard.getUtilizedBalance().add(monto));
                             creditCardRepository.save(creditCard).subscribe();
                             movimientosRepository.save(new Movimiento(new ObjectId(), creditCard.getId().toString(), monto, Constantes.CONSUMO_CREDIT_CARD)).subscribe();
                             return Mono.just(new ResponseDTO(true, ""));
                         }).switchIfEmpty(Mono.error(new ConflictException("Tarjeta de crédito: " + numCuenta + " no existe."))))
                 .switchIfEmpty(Mono.error(new ConflictException("Cliente: " + docNumClient + " no existe esta cuenta"))));
     }
-
     @Override
     public Single<ResponseDTO> makeTransfer(String numSend, String numRec, BigDecimal monto) {
         logger.info("INI - makeTransfer - ServiceIMPL");
@@ -126,21 +124,11 @@ public class MovimientoServiceImpl implements MovimientoService {
 
     }
 
-    @Override
-    public Observable<Movimiento> getCommissionsByProduct(String cuentaNum) {
-        logger.info("INI - getCommissionsByProduct - ServiceIMPL");
-        return Observable.fromPublisher(bankAccountRepository.findByNumero(cuentaNum)
-                .flatMapMany(bankAccountSend -> movimientosRepository.findByCuentaBancariaNumero(bankAccountSend.getId().toString())
-                        .switchIfEmpty(Mono.error(new NotFoundException("No tiene movimientos con comisiones."))))
-                .switchIfEmpty(Mono.error(new NotFoundException("Número de cuenta: " + cuentaNum + " no existe."))));
-    }
-
-
     public Single<AccountProductDTO> findProductByProdNumber(String cuentaNum) {
         logger.info("INI - findProductByProdNumber - ServiceIMPL");
         return Single.fromPublisher(bankAccountRepository.findByNumero(cuentaNum)
                 .map(bankAccount -> new AccountProductDTO(bankAccount.getId()))
-                .switchIfEmpty(creditCardRepository.findByNumero(cuentaNum)
+                .switchIfEmpty(creditCardRepository.findByCardNumber(cuentaNum)
                         .map(creditCard -> new AccountProductDTO(creditCard.getId())))
                 .switchIfEmpty(creditRepository.findByNumero(cuentaNum)
                         .map(credit -> new AccountProductDTO(credit.getId())))

@@ -19,25 +19,40 @@ import java.time.LocalDateTime;
 public class CreditCard {
     @Id
     private ObjectId id;
-    @Field("numero")
+    @Field("cardNumber")
     @Indexed(unique = true)
-    private String numero;
+    private String cardNumber;
     @Field
     private String idCliente;
-    @Field("limiteCredito")
-    private BigDecimal limiteCredito;
-    @Field("consumo")
-    private BigDecimal consumo;
-
+    @Field("availableBalance")
+    private BigDecimal availableBalance;
+    @Field("utilizedBalance")
+    private BigDecimal utilizedBalance;
+    @Field("interests")
+    private BigDecimal interests;
+    private Boolean isExpired;
+    @Field("paymentDate")
+    private LocalDateTime paymentDate;
+    @Field("billingCycleEndDate")
+    private LocalDateTime billingCycleEndDate;
     private LocalDateTime created;
     private LocalDateTime updated;
 
-    public CreditCard(ObjectId id, String numero, String idCliente, BigDecimal limiteCredito) {
+    public CreditCard(ObjectId id, String cardNumber, String idCliente, BigDecimal availableBalance) {
         this.id = id;
-        this.numero = numero;
+        this.cardNumber = cardNumber;
         this.idCliente = idCliente;
-        this.limiteCredito = limiteCredito;
-        this.consumo = BigDecimal.ZERO;
+        this.availableBalance = availableBalance;
+        this.utilizedBalance = BigDecimal.ZERO;
         this.created = LocalDateTime.now();
+
+        this.isExpired = false;
+        this.interests = BigDecimal.ONE;
+        this.paymentDate = LocalDateTime.now().plusDays(20);
+        this.billingCycleEndDate = LocalDateTime.now().plusDays(25);
     }
+
+
+
+
 }

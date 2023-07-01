@@ -13,6 +13,7 @@ import proyecto.banco.bancoDemo.banco.dto.BalanceProductDTO;
 import proyecto.banco.bancoDemo.banco.entity.Credit;
 import proyecto.banco.bancoDemo.banco.entity.BankAccount;
 import proyecto.banco.bancoDemo.banco.entity.CreditCard;
+import proyecto.banco.bancoDemo.banco.entity.DebitCard;
 import proyecto.banco.bancoDemo.banco.service.AccountService;
 import javax.validation.Valid;
 
@@ -25,6 +26,7 @@ public class AccountController {
     public static final String CREDIT = "/credit";
     public static final String ACCOUNT = "/accounts";
     public static final String GET_BALANCE = "/{clienteNumDoc}/balances";
+    public static final String CREATE_CREDIT_DEBIT = "/account/debit";
     @Autowired
     private AccountService accountService;
     @PostMapping(AccountController.BANK_ACCOUNT)
@@ -43,6 +45,11 @@ public class AccountController {
     public Single<CreditCard> createClientCreditCard(@RequestBody @Valid AccountRequest accountRequest) {
         logger.info("INI - createClientCreditCard");
         return accountService.createClientCreditCard(accountRequest);
+    }
+    @PostMapping(AccountController.CREATE_CREDIT_DEBIT)
+    public Single<DebitCard> createClientDebitCard(@RequestBody @Valid AccountRequest accountRequest) {
+        logger.info("INI - createDebitCardAccount");
+        return accountService.createDebitCardAccount(accountRequest);
     }
 
     @RequestMapping(value = AccountController.GET_BALANCE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
