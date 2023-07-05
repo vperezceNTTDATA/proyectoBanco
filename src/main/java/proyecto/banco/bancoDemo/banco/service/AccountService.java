@@ -8,6 +8,7 @@ import proyecto.banco.bancoDemo.banco.entity.Credit;
 import proyecto.banco.bancoDemo.banco.entity.BankAccount;
 import proyecto.banco.bancoDemo.banco.entity.CreditCard;
 import proyecto.banco.bancoDemo.banco.entity.DebitCard;
+import reactor.core.publisher.Mono;
 
 public interface AccountService {
     Single<BankAccount> createClientAccount(AccountRequest accountRequest);
@@ -15,4 +16,9 @@ public interface AccountService {
     Single<CreditCard> createClientCreditCard(AccountRequest accountRequest);
     Single<DebitCard> createDebitCardAccount(AccountRequest accountRequest);
     Observable<BalanceProductDTO> findBalanceProduct(String docNumberClient);
+    Single<BankAccount> findResumenSaldoByDebitCard(String cuentaNum);
+
+
+
+    Mono<BankAccount> findBankAccountById(String accountNumber);
 }

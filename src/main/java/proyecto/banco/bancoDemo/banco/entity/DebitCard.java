@@ -26,6 +26,7 @@ public class DebitCard {
     @Indexed(unique = true)
     private String cardNumber;
     private int securityNumber;
+    @Indexed(unique = false)
     private List<String> numberBankAccounts;
     private LocalDateTime created;
     private LocalDateTime updated;
@@ -38,7 +39,13 @@ public class DebitCard {
         this.numberBankAccounts.add(bankAccount);
         this.created = LocalDateTime.now();
     }
-    public void setBankAccounts( List<String> bankAccountList, String bankAccountNew) {
+
+    public void setNumberBankAccounts(String numberBankAccounts) {
+        this.numberBankAccounts = new ArrayList<>();
+        this.numberBankAccounts.add(numberBankAccounts);
+    }
+
+    public void setBankAccounts(List<String> bankAccountList, String bankAccountNew) {
         boolean encontrado = bankAccountList.stream()
                 .anyMatch(bankAccount -> bankAccount.equals(bankAccountNew));
         if(!encontrado)bankAccountList.add(bankAccountNew);

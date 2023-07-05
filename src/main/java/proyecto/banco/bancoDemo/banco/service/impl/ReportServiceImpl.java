@@ -8,15 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import proyecto.banco.bancoDemo.banco.dto.AccountProductDTO;
 import proyecto.banco.bancoDemo.banco.dto.ResumenSaldoDTO;
+import proyecto.banco.bancoDemo.banco.entity.BankAccount;
 import proyecto.banco.bancoDemo.banco.entity.Movimiento;
 import proyecto.banco.bancoDemo.banco.repository.*;
 import proyecto.banco.bancoDemo.banco.service.ReportService;
 import proyecto.banco.bancoDemo.model.exepcion.ConflictException;
 import proyecto.banco.bancoDemo.model.exepcion.NotFoundException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 @Service
 public class ReportServiceImpl implements ReportService {
-
     private static final Logger logger = LoggerFactory.getLogger(ReportServiceImpl.class);
     @Autowired
     private ClientRepository clientRepository;
@@ -28,6 +29,8 @@ public class ReportServiceImpl implements ReportService {
     private CreditCardRepository creditCardRepository;
     @Autowired
     private CreditRepository creditRepository;
+    @Autowired
+    private DebitCardRepository debitCardRepository;
     @Override
     public Observable<Movimiento> getCommissionsByProduct(String cuentaNum) {
         logger.info("INI - getCommissionsByProduct - ServiceIMPL");
@@ -41,4 +44,10 @@ public class ReportServiceImpl implements ReportService {
     public Observable<ResumenSaldoDTO> getResumenDailyByProduct(String cuentaNum) {
         return null;
     }
+
+    @Override
+    public Observable<Movimiento> findTenResumenByDebitAndCreditCard(String cuentaNum) {
+        return Observable.fromPublisher(movimientosRepository.findTop10ByOrderByCreatedDesc(cuentaNum));
+    }
+
 }

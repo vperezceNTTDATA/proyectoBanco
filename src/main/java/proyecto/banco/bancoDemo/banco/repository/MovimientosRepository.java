@@ -9,6 +9,6 @@ import reactor.core.publisher.Flux;
 public interface MovimientosRepository extends ReactiveMongoRepository<Movimiento, ObjectId> {
     @Query(value = "{'idProduct': ?0}")
     Flux<Movimiento> findByCuentaBancariaNumero(String idProducto);
-
-
+    @Query(value = "{'idProduct': ?0}")
+    Flux<Movimiento> findTop10ByOrderByCreatedDesc(String idProducto);
 }

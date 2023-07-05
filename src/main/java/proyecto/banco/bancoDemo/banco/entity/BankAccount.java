@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
-@Getter
 @NoArgsConstructor
 @Setter
+@Getter
 @Document(collection = "bankAccounts")
 public class BankAccount {
     @Id
@@ -35,10 +35,8 @@ public class BankAccount {
     private int movimientosActuales;
     @Field("saldo")
     private BigDecimal saldo;
-
     private List<String> titulares;
     private List<String> firmantesAutorizados;
-
     private LocalDateTime created;
     private LocalDateTime updated;
 

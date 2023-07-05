@@ -19,20 +19,16 @@ import javax.validation.Valid;
 @RequestMapping(ClienteRestController.CLIENTS)
 public class ClienteRestController {
     private static final Logger logger = LoggerFactory.getLogger(ClienteRestController.class);
-    public static final String CLIENTS = "/clients";
-    public static final String ACCOUNT = "/account";
+    public static final String CLIENTS = "/api/clients";
     @Autowired
     private ClientService clientService;
-
     @RequestMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Observable<Cliente> getClients() {
         return clientService.getClients();
     }
-
     @PostMapping
     public Single<Cliente> createClient(@RequestBody @Valid ClienteRequest clienteRequest) {
         logger.info("INI - createClient");
         return clientService.createClient(clienteRequest);
     }
-
 }

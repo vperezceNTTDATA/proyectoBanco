@@ -10,12 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import proyecto.banco.bancoDemo.banco.dto.AccountProductDTO;
 import proyecto.banco.bancoDemo.banco.dto.ResponseDTO;
+import proyecto.banco.bancoDemo.banco.entity.BankAccount;
+import proyecto.banco.bancoDemo.banco.entity.DebitCard;
 import proyecto.banco.bancoDemo.banco.entity.Movimiento;
 import proyecto.banco.bancoDemo.banco.repository.*;
 import proyecto.banco.bancoDemo.banco.service.MovimientoService;
 import proyecto.banco.bancoDemo.model.exepcion.ConflictException;
 import proyecto.banco.bancoDemo.model.exepcion.NotFoundException;
 import proyecto.banco.bancoDemo.util.Constantes;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -33,7 +36,8 @@ public class MovimientoServiceImpl implements MovimientoService {
     private CreditCardRepository creditCardRepository;
     @Autowired
     private CreditRepository creditRepository;
-
+    @Autowired
+    private DebitCardRepository debitCardRepository;
     @Override
     public Observable<Movimiento> findTransactionsByProduct(String cuentaNum) {
         logger.info("INI - consultarMovimientosCuentaBancaria - ServiceIMPL");
@@ -43,16 +47,17 @@ public class MovimientoServiceImpl implements MovimientoService {
     }
     @Override
     public Single<ResponseDTO> makeDeposit(String docNumClient, String numCuenta, BigDecimal monto) {
-        logger.info("INI - makeDeposit - ServiceIMPL");
+
         return Single.fromPublisher(clientRepository.findByNumDocumento(docNumClient)
                 .flatMap(client -> bankAccountRepository.findByNumero(numCuenta)
+                                    .switchIfEmpty(this.findBankAccountByDebitCard(numCuenta))
                                     .flatMap(cuentaBancaria -> {
                                         BigDecimal newMonto = monto;
                                         cuentaBancaria.setMovimientosActuales(cuentaBancaria.getMovimientosActuales() + 1);
                                         if(cuentaBancaria.getMovimientosActuales() >= cuentaBancaria.getMovimientosMensuales())newMonto = monto.subtract(Constantes.COMMISSION_AMOUNT);
                                         cuentaBancaria.setSaldo(cuentaBancaria.getSaldo().add(newMonto));
                                         bankAccountRepository.save(cuentaBancaria).subscribe();
-                                        movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), newMonto, Constantes.DEPOSIT, monto)).subscribe();
+                                        movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), newMonto, Constantes.DEPOSIT, monto, numCuenta)).subscribe();
                                         return Mono.just(new ResponseDTO(true, ""));
                                     }).switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + numCuenta + " no existe."))))
                 .switchIfEmpty(Mono.error(new ConflictException("Cliente: " + docNumClient + " no existe esta cuenta"))));
@@ -62,16 +67,17 @@ public class MovimientoServiceImpl implements MovimientoService {
         logger.info("INI - makeRetiro - ServiceIMPL");
         return Single.fromPublisher(clientRepository.findByNumDocumento(docNumClient)
                 .flatMap(client -> bankAccountRepository.findByNumero(numCuenta)
-                        .flatMap(cuentaBancaria -> {
-                            BigDecimal newMonto = monto;
-                            cuentaBancaria.setMovimientosActuales(cuentaBancaria.getMovimientosActuales() + 1);
-                            if(cuentaBancaria.getMovimientosActuales() >= cuentaBancaria.getMovimientosMensuales())newMonto = monto.add(Constantes.COMMISSION_AMOUNT);
-                            if(cuentaBancaria.getSaldo().compareTo(newMonto) < 0)return Mono.error(new ConflictException("No tienes suficiente saldo."));
-                            cuentaBancaria.setSaldo(cuentaBancaria.getSaldo().subtract(newMonto));
-                            bankAccountRepository.save(cuentaBancaria).subscribe();
-                            movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), newMonto, Constantes.RETIRO, monto)).subscribe();
-                            return Mono.just(new ResponseDTO(true, ""));
-                        }).switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + numCuenta + " no existe."))))
+                                    .switchIfEmpty(this.findBankAccountByDebitCard(numCuenta))
+                                    .flatMap(cuentaBancaria -> {
+                                        BigDecimal newMonto = monto;
+                                        cuentaBancaria.setMovimientosActuales(cuentaBancaria.getMovimientosActuales() + 1);
+                                        if(cuentaBancaria.getMovimientosActuales() >= cuentaBancaria.getMovimientosMensuales())newMonto = monto.add(Constantes.COMMISSION_AMOUNT);
+                                        if(cuentaBancaria.getSaldo().compareTo(newMonto) < 0)return Mono.error(new ConflictException("No tienes suficiente saldo."));
+                                        cuentaBancaria.setSaldo(cuentaBancaria.getSaldo().subtract(newMonto));
+                                        bankAccountRepository.save(cuentaBancaria).subscribe();
+                                        movimientosRepository.save(new Movimiento(new ObjectId(), cuentaBancaria.getId().toString(), newMonto, Constantes.RETIRO, monto, numCuenta)).subscribe();
+                                        return Mono.just(new ResponseDTO(true, ""));
+                                    }).switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + numCuenta + " no existe."))))
                 .switchIfEmpty(Mono.error(new ConflictException("Cliente: " + docNumClient + " no existe esta cuenta"))));
     }
     @Override
@@ -124,6 +130,13 @@ public class MovimientoServiceImpl implements MovimientoService {
 
     }
 
+    public Mono<BankAccount> findBankAccountByDebitCard(String numDebitCard){
+        return debitCardRepository.findByCardNumber(numDebitCard)
+                .flatMap(numberProduct -> Flux.fromIterable(numberProduct.getNumberBankAccounts())
+                .flatMap(numberAccount -> bankAccountRepository.findByNumero(numberAccount))
+                .take(1).single())
+                .switchIfEmpty(Mono.error(new ConflictException("Número de tarjeta: " + numDebitCard + " no existe esta cuenta")));
+    }
     public Single<AccountProductDTO> findProductByProdNumber(String cuentaNum) {
         logger.info("INI - findProductByProdNumber - ServiceIMPL");
         return Single.fromPublisher(bankAccountRepository.findByNumero(cuentaNum)

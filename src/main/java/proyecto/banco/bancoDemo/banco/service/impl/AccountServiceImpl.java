@@ -102,22 +102,19 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Single<DebitCard> createDebitCardAccount(AccountRequest accountRequest) {
         logger.info("INI - createDebitCardAccount - ServiceIMPL");
-        return Single.fromPublisher(clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
-                .flatMapMany(client -> bankAccountRepository.findByNumero(accountRequest.getNumProducto())
-                        .flatMapMany(cuentaBancaria -> debitCardRepository.findByCardNumber(accountRequest.getNumberDebitCard())
-                                         .flatMap(debitCard -> {
+        return Single.fromPublisher(bankAccountRepository.findByNumero(accountRequest.getNumProducto())
+                        .flatMap(cuentaBancaria -> debitCardRepository.findByCardNumber(accountRequest.getNumberDebitCard())
+                                .flatMap(debitCard -> {
                                              debitCard.setBankAccounts(debitCard.getNumberBankAccounts(), cuentaBancaria.getNumero());
-                                             logger.info("INI - debitCard ");
                                              return debitCardRepository.save(debitCard);
                                          })
                                 .defaultIfEmpty(new DebitCard())
                                 .flatMap(debitCard -> {
-                                    logger.info("INI - debitCard v3 " + debitCard.getId());
-                                    if(debitCard.getId() == null) return debitCardRepository.save(new DebitCard(new ObjectId(), accountRequest.getNumberDebitCard(), cuentaBancaria.getNumero()));
-                                    return Mono.just(debitCard);
+                                    if(debitCard.getId() == null)return debitCardRepository.save(new DebitCard(new ObjectId(), accountRequest.getNumberDebitCard(), cuentaBancaria.getNumero()));
+                                    else return Mono.just(debitCard);
                                  }))
-                        .switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + accountRequest.getNumProducto() + " no existe."))))
-                .switchIfEmpty(Mono.error(new ConflictException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta"))));}
+                        .switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + accountRequest.getNumProducto() + " no existe."))));
+    }
 
     @Override
     public Observable<BalanceProductDTO> findBalanceProduct(String docNumberClient) {
@@ -129,6 +126,21 @@ public class AccountServiceImpl implements AccountService {
                                 .concatWith(creditCardRepository.findByIdCliente(cliente.getId().toString())
                                            .map(cardCredit -> new BalanceProductDTO(Constantes.NAME_CREDIT_CARD, cliente.getTipoCliente().name(), cardCredit.getUtilizedBalance(), cardCredit.getCardNumber(), cardCredit.getAvailableBalance()))))
                 .switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + docNumberClient + " no existe esta cuenta"))));
+    }
+
+    @Override
+    public Single<BankAccount> findResumenSaldoByDebitCard(String cuentaNum) {
+        return Single.fromPublisher(debitCardRepository.findByCardNumber(cuentaNum)
+                .flatMap(numberProduct -> Flux.fromIterable(numberProduct.getNumberBankAccounts())
+                        .flatMap(numberAccount -> bankAccountRepository.findByNumero(numberAccount))
+                        .take(1).single())
+                .switchIfEmpty(Mono.error(new ConflictException("Número de tarjeta: " + cuentaNum + " no existe esta cuenta"))));
+    }
+
+    @Override
+    public Mono<BankAccount> findBankAccountById(String accountNumber) {
+        logger.info("INI - findBankAccountById - ServiceIMPL");
+        return bankAccountRepository.findByNumero(accountNumber);
     }
 
     public Flux<CreditCard> getExpiredCreditCard(String idCliente) {

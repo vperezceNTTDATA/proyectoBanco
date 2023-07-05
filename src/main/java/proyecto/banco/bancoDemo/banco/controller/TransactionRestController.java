@@ -25,8 +25,7 @@ public class TransactionRestController {
     public static final String POST_PAY_CREDIT = "/{numCliente}/credit/{numProd}/payment";
     public static final String POST_PAY_CREDIT_CARD = "/{numCliente}/creditCard/{numProd}/consume";
     public static final String POST_TRANSFER = "/{numBankAccountSend}/send/{numBankAccountRec}/receive";
-    public static final String TRANSACTION = "/transactions";
-
+    public static final String TRANSACTION = "/api/transactions";
     @Autowired
     private MovimientoService movimientoService;
 
@@ -67,6 +66,4 @@ public class TransactionRestController {
         return movimientoService.makeTransfer(numBankAccountSend, numBankAccountRec, new BigDecimal(monto))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED).body("Transferencia realizado exitosamente."));
     }
-
-
 }
