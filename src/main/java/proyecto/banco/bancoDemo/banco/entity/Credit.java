@@ -22,7 +22,7 @@ import lombok.Setter;
 @Document(collection = "credits")
 public class Credit {
     @Id
-    private ObjectId id;
+    private String id;
     @Field("numero")
     @Indexed(unique = true)
     private String numero;
@@ -38,8 +38,7 @@ public class Credit {
     private LocalDateTime created;
     private LocalDateTime updated;
 
-    public Credit(ObjectId id, String numero, String idCliente, String creditType, BigDecimal monto) {
-        this.id = id;
+    public Credit( String numero, String idCliente, String creditType, BigDecimal monto) {
         this.numero = numero;
         this.idCliente = idCliente;
         this.monto = monto;

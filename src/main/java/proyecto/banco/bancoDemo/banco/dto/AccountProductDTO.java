@@ -7,5 +7,5 @@ import org.bson.types.ObjectId;
 @Getter
 @AllArgsConstructor
 public class AccountProductDTO {
-    private ObjectId objectId;
+    private String idProduct;
 }

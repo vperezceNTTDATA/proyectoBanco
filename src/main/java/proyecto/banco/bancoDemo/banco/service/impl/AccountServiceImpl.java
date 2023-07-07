@@ -26,124 +26,117 @@ import java.math.BigDecimal;
 
 @Service
 public class AccountServiceImpl implements AccountService {
-    private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
-    @Autowired
-    private ClientRepository clientRepository;
-    @Autowired
-    private BankAccountRepository bankAccountRepository;
-    @Autowired
-    private CreditRepository creditRepository;
-    @Autowired
-    private CreditCardRepository creditCardRepository;
-    @Autowired
-    private DebitCardRepository debitCardRepository;
+  private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
+  @Autowired
+  private ClientRepository clientRepository;
+  @Autowired
+  private BankAccountRepository bankAccountRepository;
+  @Autowired
+  private CreditRepository creditRepository;
+  @Autowired
+  private CreditCardRepository creditCardRepository;
+  @Autowired
+  private DebitCardRepository debitCardRepository;
 
-    @Override
-    public Single<BankAccount> createClientAccount(AccountRequest accountRequest) {
-        logger.info("INI - createClientAccount - ServiceIMPL");
+  @Override
+  public Single<BankAccount> createClientAccount(AccountRequest accountRequest) {
+    logger.info("INI - createClientAccount - ServiceIMPL");
 
-        Single<Cliente> clienteSingle = Single.fromPublisher(
-                clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
-                        .flatMap(cliente -> {
-                            if(cliente.getTipoCliente().name().equals(TipoCliente.EMPRESARIAL.name())) {
-                                if (accountRequest.getTipoCuenta().equals(TipoCuenta.AHORRO.name())) return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta de ahorro."));
-                                else if (accountRequest.getTipoCuenta().equals(TipoCuenta.PLAZO_FIJO.name())) return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta a plazo fijo."));
-                            }
-                            else if(cliente.getTipoCliente().name().equals(TipoCliente.PERSONAL.name()))  {
-                                return bankAccountRepository.findByIdCliente(cliente.getId().toString()).flatMap(bankAccount -> Mono.error(
-                                        new ConflictException("Cliente personal: " + accountRequest.getNumDocumento() + " ya tiene una cuenta de ahorro, una cuenta corriente o cuentas a plazo fijo")))
-                                        .then(this.getExpiredCreditCard(cliente.getId().toString()).then(Mono.just(cliente)));
-                            }
-                            else if(cliente.getTipoCliente().name().equals(TipoCliente.PERSONAL_VIP.name()))  {
-                                return creditCardRepository.findByIdCliente(cliente.getId().toString())
-                                        .switchIfEmpty(Mono.error(new ConflictException("Cliente VIP: " + accountRequest.getNumDocumento() + " debe tener una tarjeta de crédito. ")))
-                                        .then(this.getExpiredCreditCard(cliente.getId().toString()).then(Mono.just(cliente)));
-                            }
-                            else if(cliente.getTipoCliente().name().equals(TipoCliente.EMPRESARIAL_PYME.name()))  {
-                                return bankAccountRepository.findByIdCliente(cliente.getId().toString())
-                                        .filter(bankAccount -> bankAccount.getTipoCuenta().name().equals(TipoCuenta.CUENTA_CORRIENTE.name()))
-                                        .switchIfEmpty(Mono.error(new ConflictException("Cliente PYME: " + accountRequest.getNumDocumento() + " debe de tener una cuenta corriente")))
-                                        .then(creditCardRepository.findByIdCliente(cliente.getId().toString())
-                                                .switchIfEmpty(Mono.error(new ConflictException("Cliente PYME: " + accountRequest.getNumDocumento() + " debe tener una tarjeta de crédito. ")))
-                                                .then(this.getExpiredCreditCard(cliente.getId().toString()).then(Mono.just(cliente))));
-                            }
-                            return this.getExpiredCreditCard(cliente.getId().toString()).then(Mono.just(cliente));
-                        }).switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta")))
-                );
-        BankAccount bankAccount = new BankAccount(new ObjectId(), accountRequest.getNumProducto(), clienteSingle.blockingGet().getId().toString(), accountRequest.getTipoCuenta(), accountRequest.getSaldo());
-        if(clienteSingle.blockingGet().getTipoCliente().name().equals(TipoCliente.EMPRESARIAL.name())){
-            if(validarTitularFirmantes(accountRequest)){
-                bankAccount.setTitulares(accountRequest.getListTitulares());
-                bankAccount.setFirmantesAutorizados(accountRequest.getFirmantesAut());
-            }
-        }
-        return Single.fromPublisher(bankAccountRepository.save(bankAccount));
+    Single<Cliente> clienteSingle = Single.fromPublisher(
+        clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
+            .flatMap(cliente -> {
+              if(cliente.getTipoCliente().name().equals(TipoCliente.EMPRESARIAL.name())) {
+                if (accountRequest.getTipoCuenta().equals(TipoCuenta.AHORRO.name())) return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta de ahorro."));
+                else if (accountRequest.getTipoCuenta().equals(TipoCuenta.PLAZO_FIJO.name())) return Mono.error(new ConflictException("Cliente empresarial: " + accountRequest.getNumDocumento() + " no puede tener una cuenta a plazo fijo."));
+              }
+              else if(cliente.getTipoCliente().name().equals(TipoCliente.PERSONAL.name()))  {
+                return bankAccountRepository.findByIdCliente(cliente.getId()).flatMap(bankAccount -> Mono.error(
+                        new ConflictException("Cliente personal: " + accountRequest.getNumDocumento() + " ya tiene una cuenta de ahorro, una cuenta corriente o cuentas a plazo fijo")))
+                    .then(this.getExpiredCreditCard(cliente.getId()).then(Mono.just(cliente)));
+              }
+              else if(cliente.getTipoCliente().name().equals(TipoCliente.PERSONAL_VIP.name()))  {
+                return creditCardRepository.findByIdCliente(cliente.getId())
+                    .switchIfEmpty(Mono.error(new ConflictException("Cliente VIP: " + accountRequest.getNumDocumento() + " debe tener una tarjeta de crédito. ")))
+                    .then(this.getExpiredCreditCard(cliente.getId()).then(Mono.just(cliente)));
+              }
+              else if(cliente.getTipoCliente().name().equals(TipoCliente.EMPRESARIAL_PYME.name()))  {
+                return bankAccountRepository.findByIdCliente(cliente.getId())
+                    .filter(bankAccount -> bankAccount.getTipoCuenta().name().equals(TipoCuenta.CUENTA_CORRIENTE.name()))
+                    .switchIfEmpty(Mono.error(new ConflictException("Cliente PYME: " + accountRequest.getNumDocumento() + " debe de tener una cuenta corriente")))
+                    .then(creditCardRepository.findByIdCliente(cliente.getId())
+                        .switchIfEmpty(Mono.error(new ConflictException("Cliente PYME: " + accountRequest.getNumDocumento() + " debe tener una tarjeta de crédito. ")))
+                        .then(this.getExpiredCreditCard(cliente.getId()).then(Mono.just(cliente))));
+              }
+              return this.getExpiredCreditCard(cliente.getId()).then(Mono.just(cliente));
+            }).switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta")))
+    );
+    BankAccount bankAccount = new BankAccount(accountRequest.getNumProducto(), clienteSingle.blockingGet().getId(), accountRequest.getTipoCuenta(), accountRequest.getSaldo());
+    if(clienteSingle.blockingGet().getTipoCliente().name().equals(TipoCliente.EMPRESARIAL.name())){
+      if(validarTitularFirmantes(accountRequest)){
+        bankAccount.setTitulares(accountRequest.getListTitulares());
+        bankAccount.setFirmantesAutorizados(accountRequest.getFirmantesAut());
+      }
     }
-    @Override
-    public Single<Credit> createClientCredit(AccountRequest accountRequest) {
-        logger.info("INI - createClientCredit - ServiceIMPL");
-        return  Single.fromPublisher(clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
-                        .switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta")))
-                        .flatMap(cliente -> this.getExpiredCreditCard(cliente.getId().toString())
-                                    .then(creditRepository.findByIdClient(cliente.getId().toString())
-                                    .filter(cli -> cli.getTipoCredito().name().equals(TipoCliente.PERSONAL.name()))
-                                    .flatMap(e -> Mono.error(new ConflictException("Cliente: " + accountRequest.getNumDocumento() + " - Solo se permite un solo crédito por persona.")))
-                                            .then(creditRepository.save(new Credit(new ObjectId(), accountRequest.getNumProducto(), cliente.getId().toString() , cliente.getTipoCliente().name(), accountRequest.getMonto()))))));
-    }
-    @Override
-    public Single<CreditCard> createClientCreditCard(AccountRequest accountRequest) {
-        logger.info("INI - createClientCreditCard - ServiceIMPL");
-        return  Single.fromPublisher(clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
-                .flatMap(cliente -> this.getExpiredCreditCard(cliente.getId().toString())
-                        .then(creditCardRepository.save(new CreditCard(new ObjectId(), accountRequest.getNumProducto(), cliente.getId().toString(), accountRequest.getMonto()))))
-                .switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta"))));
-    }
+    return Single.fromPublisher(bankAccountRepository.save(bankAccount));
+  }
+  @Override
+  public Single<Credit> createClientCredit(AccountRequest accountRequest) {
+    logger.info("INI - createClientCredit - ServiceIMPL");
+    return  Single.fromPublisher(clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
+        .switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta")))
+        .flatMap(cliente -> this.getExpiredCreditCard(cliente.getId())
+            .then(creditRepository.findByIdClient(cliente.getId())
+                .filter(cli -> cli.getTipoCredito().name().equals(TipoCliente.PERSONAL.name()))
+                .flatMap(e -> Mono.error(new ConflictException("Cliente: " + accountRequest.getNumDocumento() + " - Solo se permite un solo crédito por persona.")))
+                .then(creditRepository.save(new Credit(accountRequest.getNumProducto(), cliente.getId(), cliente.getTipoCliente().name(), accountRequest.getMonto()))))));
+  }
+  @Override
+  public Single<CreditCard> createClientCreditCard(AccountRequest accountRequest) {
+    logger.info("INI - createClientCreditCard - ServiceIMPL");
+    return  Single.fromPublisher(clientRepository.findByNumDocumento(accountRequest.getNumDocumento())
+        .flatMap(cliente -> this.getExpiredCreditCard(cliente.getId())
+            .then(creditCardRepository.save(new CreditCard(accountRequest.getNumProducto(), cliente.getId(), accountRequest.getMonto()))))
+        .switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + accountRequest.getNumDocumento() + " no existe esta cuenta"))));
+  }
 
-    @Override
-    public Single<DebitCard> createDebitCardAccount(AccountRequest accountRequest) {
-        logger.info("INI - createDebitCardAccount - ServiceIMPL");
-        return Single.fromPublisher(bankAccountRepository.findByNumero(accountRequest.getNumProducto())
-                        .flatMap(cuentaBancaria -> debitCardRepository.findByCardNumber(accountRequest.getNumberDebitCard())
-                                .flatMap(debitCard -> {
-                                             debitCard.setBankAccounts(debitCard.getNumberBankAccounts(), cuentaBancaria.getNumero());
-                                             return debitCardRepository.save(debitCard);
-                                         })
-                                .defaultIfEmpty(new DebitCard())
-                                .flatMap(debitCard -> {
-                                    if(debitCard.getId() == null)return debitCardRepository.save(new DebitCard(new ObjectId(), accountRequest.getNumberDebitCard(), cuentaBancaria.getNumero()));
-                                    else return Mono.just(debitCard);
-                                 }))
-                        .switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + accountRequest.getNumProducto() + " no existe."))));
-    }
+  @Override
+  public Single<DebitCard> createDebitCardAccount(AccountRequest accountRequest) {
+    logger.info("INI - createDebitCardAccount - ServiceIMPL");
+    return Single.fromPublisher(bankAccountRepository.findByNumero(accountRequest.getNumProducto())
+        .flatMap(cuentaBancaria -> debitCardRepository.findByCardNumber(accountRequest.getNumberDebitCard())
+            .flatMap(debitCard -> {
+              debitCard.setBankAccounts(debitCard.getNumberBankAccounts(), cuentaBancaria.getNumero());
+              return debitCardRepository.save(debitCard);
+            })
+            .defaultIfEmpty(new DebitCard())
+            .flatMap(debitCard -> {
+              if(debitCard.getId() == null)return debitCardRepository.save(new DebitCard(accountRequest.getNumberDebitCard(), cuentaBancaria.getNumero()));
+              else return Mono.just(debitCard);
+            }))
+        .switchIfEmpty(Mono.error(new ConflictException("Cuenta bancaria: " + accountRequest.getNumProducto() + " no existe."))));
+  }
 
-    @Override
-    public Observable<BalanceProductDTO> findBalanceProduct(String docNumberClient) {
-        logger.info("INI - findBalanceProduct - ServiceIMPL");
+  @Override
+  public Observable<BalanceProductDTO> findBalanceProduct(String docNumberClient) {
+    logger.info("INI - findBalanceProduct - ServiceIMPL");
 
-        return Observable.fromPublisher(clientRepository.findByNumDocumento(docNumberClient)
-                        .flatMapMany(cliente -> bankAccountRepository.findByIdCliente(cliente.getId().toString())
-                               .map(bankAccount -> new BalanceProductDTO(Constantes.NAME_BANK_ACCOUNT, bankAccount.getTipoCuenta().name(), bankAccount.getSaldo(), bankAccount.getNumero()))
-                                .concatWith(creditCardRepository.findByIdCliente(cliente.getId().toString())
-                                           .map(cardCredit -> new BalanceProductDTO(Constantes.NAME_CREDIT_CARD, cliente.getTipoCliente().name(), cardCredit.getUtilizedBalance(), cardCredit.getCardNumber(), cardCredit.getAvailableBalance()))))
-                .switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + docNumberClient + " no existe esta cuenta"))));
-    }
+    return Observable.fromPublisher(clientRepository.findByNumDocumento(docNumberClient)
+        .flatMapMany(cliente -> bankAccountRepository.findByIdCliente(cliente.getId())
+            .map(bankAccount -> new BalanceProductDTO(Constantes.NAME_BANK_ACCOUNT, bankAccount.getTipoCuenta().name(), bankAccount.getSaldo(), bankAccount.getNumero()))
+            .concatWith(creditCardRepository.findByIdCliente(cliente.getId())
+                .map(cardCredit -> new BalanceProductDTO(Constantes.NAME_CREDIT_CARD, cliente.getTipoCliente().name(), cardCredit.getUtilizedBalance(), cardCredit.getCardNumber(), cardCredit.getAvailableBalance()))))
+        .switchIfEmpty(Mono.error(new NotFoundException("Cliente: " + docNumberClient + " no existe esta cuenta"))));
+  }
 
-    @Override
-    public Single<BankAccount> findResumenSaldoByDebitCard(String cuentaNum) {
-        return Single.fromPublisher(debitCardRepository.findByCardNumber(cuentaNum)
-                .flatMap(numberProduct -> Flux.fromIterable(numberProduct.getNumberBankAccounts())
-                        .flatMap(numberAccount -> bankAccountRepository.findByNumero(numberAccount))
-                        .take(1).single())
-                .switchIfEmpty(Mono.error(new ConflictException("Número de tarjeta: " + cuentaNum + " no existe esta cuenta"))));
-    }
-
-    @Override
-    public Mono<BankAccount> findBankAccountById(String accountNumber) {
-        logger.info("INI - findBankAccountById - ServiceIMPL");
-        return bankAccountRepository.findByNumero(accountNumber);
-    }
-
-    public Flux<CreditCard> getExpiredCreditCard(String idCliente) {
+  @Override
+  public Single<BankAccount> findResumenSaldoByDebitCard(String cuentaNum) {
+    return Single.fromPublisher(debitCardRepository.findByCardNumber(cuentaNum)
+        .flatMap(numberProduct -> Flux.fromIterable(numberProduct.getNumberBankAccounts())
+            .flatMap(numberAccount -> bankAccountRepository.findByNumero(numberAccount))
+            .take(1).single())
+        .switchIfEmpty(Mono.error(new ConflictException("Número de tarjeta: " + cuentaNum + " no existe esta cuenta"))));
+  }
+  public Flux<CreditCard> getExpiredCreditCard(String idCliente) {
         logger.info("INI - getExpiredCreditCard - ServiceIMPL");
         return creditCardRepository.findByIdCliente(idCliente)
                 .filter(CreditCard::getIsExpired)

@@ -21,17 +21,15 @@ import java.util.Random;
 @Document(collection = "debitCards")
 public class DebitCard {
     @Id
-    private ObjectId id;
+    private String id;
     @Field("cardNumber")
     @Indexed(unique = true)
     private String cardNumber;
     private int securityNumber;
-    @Indexed(unique = false)
     private List<String> numberBankAccounts;
     private LocalDateTime created;
     private LocalDateTime updated;
-    public DebitCard(ObjectId id, String cardNumber, String bankAccount) {
-        this.id = id;
+    public DebitCard(String cardNumber, String bankAccount) {
         this.cardNumber = cardNumber;
         this.securityNumber = new Random().nextInt(9000) + 1000;
 

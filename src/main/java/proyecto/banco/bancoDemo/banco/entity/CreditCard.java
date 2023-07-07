@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Document(collection = "creditCards")
 public class CreditCard {
     @Id
-    private ObjectId id;
+    private String id;
     @Field("cardNumber")
     @Indexed(unique = true)
     private String cardNumber;
@@ -38,8 +38,7 @@ public class CreditCard {
     private LocalDateTime created;
     private LocalDateTime updated;
 
-    public CreditCard(ObjectId id, String cardNumber, String idCliente, BigDecimal availableBalance) {
-        this.id = id;
+    public CreditCard(String cardNumber, String idCliente, BigDecimal availableBalance) {
         this.cardNumber = cardNumber;
         this.idCliente = idCliente;
         this.availableBalance = availableBalance;

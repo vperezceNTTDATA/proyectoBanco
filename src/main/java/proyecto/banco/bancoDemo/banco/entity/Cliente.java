@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Document(collection = "clients")
 public class Cliente {
     @Id
-    private ObjectId id;
+    private String id;
     @Field("nombre")
     private String nombre;
     @Field("numDocumento")
@@ -30,14 +30,7 @@ public class Cliente {
     private LocalDateTime created;
     private LocalDateTime updated;
 
-    public Cliente(ObjectId id) {
-        this.id = id;
-        this.nombre = "";
-        this.numDocumento = "";
-    }
-
-    public Cliente(ObjectId id, String numDocumento, String nombre) {
-        this.id = id;
+    public Cliente(String numDocumento, String nombre) {
         this.numDocumento = numDocumento;
         this.nombre = nombre;
     }

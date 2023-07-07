@@ -21,60 +21,41 @@ import java.util.List;
 @Getter
 @Document(collection = "bankAccounts")
 public class BankAccount {
-    @Id
-    private ObjectId id;
-    @Field("numero")
-    @Indexed(unique = true)
-    private String numero;
-    @Field
-    private String idCliente;
-    @Field("tipoCuenta")
-    private TipoCuenta tipoCuenta;
-    @Field("movimientosMensuales")
-    private int movimientosMensuales;
-    private int movimientosActuales;
-    @Field("saldo")
-    private BigDecimal saldo;
-    private List<String> titulares;
-    private List<String> firmantesAutorizados;
-    private LocalDateTime created;
-    private LocalDateTime updated;
+  @Id
+  private String id;
+  @Field("numero")
+  @Indexed(unique = true)
+  private String numero;
+  @Field
+  private String idCliente;
+  @Field("tipoCuenta")
+  private TipoCuenta tipoCuenta;
+  @Field("movimientosMensuales")
+  private int movimientosMensuales;
+  private int movimientosActuales;
+  @Field("saldo")
+  private BigDecimal saldo;
+  private List<String> titulares;
+  private List<String> firmantesAutorizados;
+  private LocalDateTime created;
+  private LocalDateTime updated;
 
-    public BankAccount(ObjectId id, String numero, String idCliente, String tipoCuenta, int movimientosMensuales, BigDecimal saldo) {
-        this.id = id;
-        this.numero = numero;
-        this.idCliente = idCliente;
+  public BankAccount(String numero, String idCliente, String tipoCuenta, BigDecimal saldo) {
+    this.numero = numero;
+    this.idCliente = idCliente;
 
-        if(tipoCuenta.equals(TipoCuenta.AHORRO.name())){
-            this.tipoCuenta = TipoCuenta.AHORRO;
-        }else if(tipoCuenta.equals(TipoCuenta.CUENTA_CORRIENTE.name())){
-            this.tipoCuenta = TipoCuenta.CUENTA_CORRIENTE;
-        }else{
-            this.tipoCuenta = TipoCuenta.PLAZO_FIJO;
-        }
-
-        this.movimientosMensuales = movimientosMensuales;
-        this.saldo = saldo;
-        this.created = LocalDateTime.now();
+    if(tipoCuenta.equals(TipoCuenta.AHORRO.name())){
+      this.tipoCuenta = TipoCuenta.AHORRO;
+    }else if(tipoCuenta.equals(TipoCuenta.CUENTA_CORRIENTE.name())){
+      this.tipoCuenta = TipoCuenta.CUENTA_CORRIENTE;
+    }else{
+      this.tipoCuenta = TipoCuenta.PLAZO_FIJO;
     }
 
-    public BankAccount(ObjectId id, String numero, String idCliente, String tipoCuenta, BigDecimal saldo) {
-        this.id = id;
-        this.numero = numero;
-        this.idCliente = idCliente;
-
-        if(tipoCuenta.equals(TipoCuenta.AHORRO.name())){
-            this.tipoCuenta = TipoCuenta.AHORRO;
-        }else if(tipoCuenta.equals(TipoCuenta.CUENTA_CORRIENTE.name())){
-            this.tipoCuenta = TipoCuenta.CUENTA_CORRIENTE;
-        }else{
-            this.tipoCuenta = TipoCuenta.PLAZO_FIJO;
-        }
-
-        this.movimientosMensuales = 20;
-        this.movimientosActuales = 0;
-        this.saldo = saldo;
-        this.created = LocalDateTime.now();
-    }
+    this.movimientosMensuales = 20;
+    this.movimientosActuales = 0;
+    this.saldo = saldo;
+    this.created = LocalDateTime.now();
+  }
 
 }

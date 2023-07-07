@@ -7,7 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import proyecto.banco.bancoDemo.banco.dto.AccountProductDTO;
 import proyecto.banco.bancoDemo.banco.dto.AccountRequest;
 import proyecto.banco.bancoDemo.banco.dto.BalanceProductDTO;
 import proyecto.banco.bancoDemo.banco.entity.Credit;
@@ -23,15 +25,13 @@ import javax.validation.Valid;
 @RequestMapping(AccountController.ACCOUNT)
 public class AccountController {
   private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+  public static final String ACCOUNT = "/api/accounts";
   public static final String BANK_ACCOUNT = "/bankAccount";
-  public static final String BANK_GET_ACCOUNT = "/bank-account/{accountNumber}";
   public static final String CREDIT_CARD = "/creditCard";
   public static final String CREDIT = "/credit";
-  public static final String ACCOUNT = "/api/accounts";
   public static final String GET_BALANCE = "/{clienteNumDoc}/balances";
   public static final String CREATE_CREDIT_DEBIT = "/account/debit";
   public static final String GET_RESUMEN_DEBIT_CARD = "/{idProduct}/debit";
-
   @Autowired
   private AccountService accountService;
   @PostMapping(AccountController.BANK_ACCOUNT)
@@ -39,12 +39,6 @@ public class AccountController {
     logger.info("INI - createClientAccount");
     return accountService.createClientAccount(accountRequest);
   }
-  @RequestMapping(AccountController.BANK_GET_ACCOUNT)
-  public Mono<BankAccount> findBankAccountById(@PathVariable String accountNumber) {
-    logger.info("INI - findBankAccountById");
-    return accountService.findBankAccountById(accountNumber);
-  }
-
   @PostMapping(AccountController.CREDIT)
   public Single<Credit> createClientCredit(@RequestBody @Valid AccountRequest accountRequest) {
     logger.info("INI - createClientCredit");
