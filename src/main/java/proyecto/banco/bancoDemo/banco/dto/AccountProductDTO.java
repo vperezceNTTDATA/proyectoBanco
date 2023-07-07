@@ -2,10 +2,13 @@ package proyecto.banco.bancoDemo.banco.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.bson.types.ObjectId;
 
+/*
+ * DTO for get ID in any product collection
+ *
+ */
 @Getter
 @AllArgsConstructor
 public class AccountProductDTO {
-    private String idProduct;
+  private String idProduct;
 }

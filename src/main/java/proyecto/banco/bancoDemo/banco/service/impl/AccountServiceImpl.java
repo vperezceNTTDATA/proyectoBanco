@@ -2,19 +2,24 @@ package proyecto.banco.bancoDemo.banco.service.impl;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import proyecto.banco.bancoDemo.banco.dto.AccountProductDTO;
 import proyecto.banco.bancoDemo.banco.dto.AccountRequest;
 import proyecto.banco.bancoDemo.banco.dto.BalanceProductDTO;
-import proyecto.banco.bancoDemo.banco.dto.ResponseDTO;
-import proyecto.banco.bancoDemo.banco.entity.*;
+import proyecto.banco.bancoDemo.banco.entity.BankAccount;
+import proyecto.banco.bancoDemo.banco.entity.Credit;
+import proyecto.banco.bancoDemo.banco.entity.CreditCard;
+import proyecto.banco.bancoDemo.banco.entity.DebitCard;
+import proyecto.banco.bancoDemo.banco.entity.Cliente;
 import proyecto.banco.bancoDemo.banco.enums.TipoCliente;
 import proyecto.banco.bancoDemo.banco.enums.TipoCuenta;
-import proyecto.banco.bancoDemo.banco.repository.*;
+import proyecto.banco.bancoDemo.banco.repository.BankAccountRepository;
+import proyecto.banco.bancoDemo.banco.repository.ClientRepository;
+import proyecto.banco.bancoDemo.banco.repository.CreditCardRepository;
+import proyecto.banco.bancoDemo.banco.repository.CreditRepository;
+import proyecto.banco.bancoDemo.banco.repository.DebitCardRepository;
 import proyecto.banco.bancoDemo.banco.service.AccountService;
 import proyecto.banco.bancoDemo.model.exepcion.ConflictException;
 import proyecto.banco.bancoDemo.model.exepcion.NotFoundException;
@@ -22,8 +27,9 @@ import proyecto.banco.bancoDemo.util.Constantes;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-
+/*
+  Account Service Impl.
+ */
 @Service
 public class AccountServiceImpl implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
@@ -137,13 +143,13 @@ public class AccountServiceImpl implements AccountService {
         .switchIfEmpty(Mono.error(new ConflictException("Número de tarjeta: " + cuentaNum + " no existe esta cuenta"))));
   }
   public Flux<CreditCard> getExpiredCreditCard(String idCliente) {
-        logger.info("INI - getExpiredCreditCard - ServiceIMPL");
-        return creditCardRepository.findByIdCliente(idCliente)
-                .filter(CreditCard::getIsExpired)
-                .flatMap(creditCard -> Mono.error(new ConflictException("Posee alguna deuda vencida en la cuenta: " + creditCard.getCardNumber())));
-    }
+    logger.info("INI - getExpiredCreditCard - ServiceIMPL");
+    return creditCardRepository.findByIdCliente(idCliente)
+        .filter(CreditCard::getIsExpired)
+        .flatMap(creditCard -> Mono.error(new ConflictException("Posee alguna deuda vencida en la cuenta: " + creditCard.getCardNumber())));
+  }
 
-    private boolean validarTitularFirmantes(AccountRequest accountRequest){
-        return accountRequest.getListTitulares().size() > 0 && accountRequest.getFirmantesAut().size() > 0;
-    }
+  private boolean validarTitularFirmantes(AccountRequest accountRequest){
+    return accountRequest.getListTitulares().size() > 0 && accountRequest.getFirmantesAut().size() > 0;
+  }
 }

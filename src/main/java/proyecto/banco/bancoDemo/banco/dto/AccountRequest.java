@@ -12,22 +12,22 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 public class AccountRequest {
-    @NotBlank(message = "El campo 'numDocumento' no puede estar en blanco")
-    private String numDocumento;
-    @NotBlank(message = "El campo 'numProducto' no puede estar en blanco")
-    private String numProducto;
-    private String numberDebitCard;
-    private String saldo;
-    private String tipoCuenta;
-    private String monto;
+  @NotBlank(message = "El campo 'numDocumento' no puede estar en blanco")
+  private String numDocumento;
+  @NotBlank(message = "El campo 'numProducto' no puede estar en blanco")
+  private String numProducto;
+  private String numberDebitCard;
+  private String saldo;
+  private String tipoCuenta;
+  private String monto;
+  private List<String> listTitulares;
+  private List<String> firmantesAut;
 
-    private List<String> listTitulares;
-    private List<String> firmantesAut;
+  public BigDecimal getSaldo() {
+    return new BigDecimal(saldo);
+  }
 
-    public BigDecimal getSaldo() {
-        return new BigDecimal(saldo);
-    }
-    public BigDecimal getMonto() {
-        return new BigDecimal(monto);
-    }
+  public BigDecimal getMonto() {
+    return new BigDecimal(monto);
+  }
 }
